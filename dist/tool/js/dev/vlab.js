@@ -1,71 +1,118 @@
 const test_graph = {
     nodes: [0,1,2,3,4,5,6,7,8],
+    nodesLevel: [1, 2, 2, 2, 3, 3, 3, 3, 4],
     edges: [
-        [0, 1, 1, 1, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 1, 1, 1, 0],
-        [0, 0, 0, 0, 0, 1, 1, 1, 0],
-        [0, 0, 0, 0, 0, 1, 1, 1, 0],
-        [0, 0, 0, 0, 0, 1, 1, 1, 0],
+        [0, 1, 1, 1, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 1, 1, 1, 0],
+        [0, 0, 0, 0, 1, 1, 1, 1, 0],
+        [0, 0, 0, 0, 1, 1, 1, 1, 0],
+        [0, 0, 0, 0, 1, 1, 1, 1, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 1],
         [0, 0, 0, 0, 0, 0, 0, 0, 1],
         [0, 0, 0, 0, 0, 0, 0, 0, 1],
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
     ],
-    edgesBack: [
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    ]
 };
 
-const sigmaData = {
-    nodes: [
-        {
-            id: "n0",
-            label: "A node",
-            x: 0,
-            y: 0,
-            size: 3
-        },
-        {
-            id: "n1",
-            label: "Another node",
-            x: 3,
-            y: 1,
-            size: 2
-        },
-        {
-            id: "n2",
-            label: "And a last one",
-            x: 1,
-            y: 3,
-            size: 1
-        }
+const test_graph_2 = {
+    nodes: [0,1,2,3,4],
+    nodesLevel: [1, 1, 2, 2, 3],
+    nodesValue: [
+        [1, 0, 0, 0, 0],
     ],
     edges: [
-        {
-            id: "e0",
-            source: "n0",
-            target: "n1"
-        },
-        {
-            id: "e1",
-            source: "n1",
-            target: "n2"
-        },
-        {
-            id: "e2",
-            source: "n2",
-            target: "n0"
-        }
-    ]
+        [0, 0, 1, 1, 0],
+        [0, 0, 1, 1, 0],
+        [0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0],
+    ],
+    edgeWeight: [
+        [0, 0, 0.45, 0.78, 0],
+        [0, 0, -0.12, 0.13, 0],
+        [0, 0, 0, 0, 1.5],
+        [0, 0, 0, 0, -2.3],
+        [0, 0, 0, 0, 0],
+    ],
 };
+
+function dataToSigma(data) {
+    let edges = data.edges;
+    let nodes = data.nodes;
+    let nodesLevel = data.nodesLevel;
+    let edgeWeight = data.edgeWeight;
+    let resultEdges = [];
+    let resultNodes = [];
+    let nodesLevelAmount = [];
+    let t = 1;
+    let maxLevel = 1;
+    let yLevel = 1;
+
+    for (let i = 0; i < nodesLevel.length; i++) {
+        nodesLevelAmount[nodesLevel[i]] = 1 + (nodesLevelAmount[nodesLevel[i]] || 0);
+    }
+
+    nodesLevelAmount.map(el => {
+       if (maxLevel < el)
+        maxLevel = el;
+    });
+
+    let yCenter = maxLevel / 2;
+
+    for (let i = 0; i < nodes.length; i++) {
+
+        //рисует всё равно криво: порядок нод не тот по вертикали, но хотя бы выравнено, лол
+        if(i === 0 || i === nodes.length - 1)
+        {
+            yLevel = yCenter;
+        }
+        else
+        {
+            let dy = nodesLevel[i] / maxLevel;
+
+            yLevel = i * dy;
+            // if(nodesLevel[i] === nodesLevel[i - 1])
+            // {
+            //     yLevel = dy * t;
+            //     t++;
+            // }
+            // else
+            // {
+            //     t = 1;
+            // }
+        }
+
+        resultNodes[i] = {
+            id: "n" + i,
+            label:  i.toString(),
+            x: nodesLevel[i],
+            y: yLevel,
+            size: 4,
+            color: "#000",
+        };
+    }
+
+    console.log(resultNodes);
+
+    for (let i = 0; i < edges.length; i++) {
+        for (let j = 0; j < edges.length; j++) {
+            if(edges[i][j] === 1)
+            {
+                resultEdges.push({
+                    id: "e" + i + j,
+                    source: "n" + i,
+                    target: "n" + j,
+                    label: edgeWeight[i][j].toString(),
+                });
+            }
+        }
+    }
+
+    return {
+        nodes: resultNodes,
+        edges: resultEdges,
+    }
+}
 
 function getHTML(templateData) {
     let tableData = "";
@@ -81,7 +128,7 @@ function getHTML(templateData) {
                     <td colspan="2">
                         <div class="lab-header">
                             <div></div>
-                            <span>Алгоритм нахождения максимального потока графа на основе метода Форда-Фалкерсона</span>
+                            <span>Ток сигнала в перцептроне Роттенберга</span>
                             <!-- Button trigger modal -->
                             <button type="button" class="btn btn-info" data-toggle="modal" data-target="#exampleModalScrollable">
                               Справка
@@ -128,8 +175,7 @@ function getHTML(templateData) {
                 </tr>
                 <tr>
                     <td>
-                        <div class="graphComponent">
-                            <svg class="graphSvg" width=700 height=500>
+                        <div class="graphComponent">                          
                             <div id="container"></div>
                         </div>
                     </td>
@@ -154,8 +200,8 @@ function getHTML(templateData) {
                                 <input type="button" value="Завершить" class="btnGray completeBtn"/>
                             </div>
                             <div class="maxFlow">
-                                <span>Максимальный поток графа:</span>
-                                <input type='number' ${!templateData.isLabComplete ? "disabled" : ""} class='maxFlow-input' value="${templateData.maxFlow}" placeholder='Максимальный поток'/>                       
+                                <span>Ошибка:</span>
+                                <input type='number' ${!templateData.isLabComplete ? "disabled" : ""} class='maxFlow-input' value="${templateData.maxFlow}"'/>                       
                             </div>                                                                                                                                            
                         </div>
                     </td>
@@ -170,11 +216,7 @@ function renderTemplate(element, html) {
 
 function initState() {
     let _state = {
-        selectedNodesVariantData: [[]],
-        currentStep: 0,
-        currentMinWeight: 0,
-        currentMinWeightData: [],
-        maxFlow: 0,
+        currentNodeSection: [],
         isLabComplete: false,
     };
 
@@ -368,70 +410,64 @@ function bindActionListeners(appInstance)
 }
 
 function renderDag(state, appInstance) {
-    // Create the input graph
-    let g = new dagreD3.graphlib.Graph()
-        .setGraph({rankdir: "LR"})
-        .setDefaultEdgeLabel(function () {
-            return {};
-        });
-
-    state.stepsVariantData[state.currentStep].nodes.forEach((el, index) => {
-        g.setNode(index, {shape: 'circle', label: el});
+    var s = new sigma({
+        renderers: [{
+            container: document.getElementById('container'),
+            type: "canvas",
+        }],
+        settings: {
+            defaultEdgeLabelSize: 15,
+        },
     });
 
-    for (let i = 0; i < state.stepsVariantData[state.currentStep].edges.length; i++) {
-        for (let j = 0; j < state.stepsVariantData[state.currentStep].edges.length; j++) {
-            if (state.graphSkeleton[i][j] > 0) {
-                g.setEdge(i, j, {
-                    label: state.stepsVariantData[state.currentStep].edges[i][j] + "/" + state.stepsVariantData[state.currentStep].edgesBack[i][j],
-                    arrowhead: "normal"
+    let testData = dataToSigma(test_graph_2);
+
+    testData.nodes.map(node => {
+        s.graph.addNode(node);
+    });
+
+    testData.edges.map(edge => {
+        s.graph.addEdge(edge);
+    });
+
+    s.bind('clickNode', (res) => {
+        console.log(res);
+
+        const state = appInstance.state.updateState((state) => {
+            let currentNodeSectionCopy = [...state.currentNodeSection];
+            //todo доделай блин
+            if(currentNodeSectionCopy.length === 0)
+            {
+                currentNodeSectionCopy.push(res.data.node.id);
+            }
+            else if(currentNodeSectionCopy.length === 1)
+            {
+                currentNodeSectionCopy.map((nodeId, index) => {
+                   if(nodeId === res.data.node.id)
+                   {
+                       currentNodeSectionCopy.splice(index, 1);
+                   }
+                   //в массиве 2 уже 2 элемента
+                   else
+                   {
+                       currentNodeSectionCopy.push(res.data.node.id);
+                   }
                 });
             }
-        }
-    }
 
-    // Create the renderer
-    let render = new dagreD3.render();
-
-    // Set up an SVG group so that we can translate the final graph.
-    let svg = d3.select("svg"),
-        svgGroup = svg.append("g");
-
-    let nodesList = svg.selectAll("g.node")._groups[0];
-
-    //очистка всех выделенных точек
-    nodesList.forEach((el, index) => {
-        el.setAttribute("class", el.getAttribute("class").replace("selectedNode", null));
-    });
-
-    // Run the renderer. This is what draws the final graph.
-    render(d3.select("svg g"), g);
-
-    //выделение всех нод попавших выделенные ноды
-    nodesList.forEach((node, i) => {
-        state.selectedNodesVariantData[state.currentStep].map((selected_node, j) => {
-            if (selected_node === i) {
-                node.setAttribute("class", node.getAttribute("class") + " selectedNode");
+            return {
+                ...state,
+                currentNodeSection: currentNodeSectionCopy,
             }
         });
+
+        console.log(state);
+        appInstance.subscriber.emit('render', state);
     });
 
-    // Center the graph
-    let xCenterOffset = (svg.attr("width") - g.graph().width) / 2;
-    let yCenterOffset = (svg.attr("height") - g.graph().height) / 2;
+    s.refresh();
 
-    svgGroup.attr("transform", "translate(" + xCenterOffset + "," + yCenterOffset + ")");
-
-    //SIGMA
-
-    sigma.parsers.json(sigmaData, {
-        container: 'container',
-        settings: {
-            defaultNodeColor: '#ec5148'
-        }
-    });
-
-    console.log(sigmaData);
+    console.log(testData);
 }
 
 function init_lab() {
@@ -446,49 +482,13 @@ function init_lab() {
 
         //Инициализация ВЛ
         init: function () {
-            if(document.getElementById("preGeneratedCode"))
-            {
-                if(document.getElementById("preGeneratedCode").value !== "")
-                {
-                    const state = appInstance.state.updateState((state) => {
-                        console.log(document.getElementById("preGeneratedCode").value, 'beforeParse');
-                        let graph = JSON.parse(document.getElementById("preGeneratedCode").value);
-                        console.log(graph);
-                        return {
-                            ...state,
-                            stepsVariantData: [{...graph}],
-                            graphSkeleton: [...graph.edges],
-                        }
-                    });
-                }
-
-                //appInstance.subscriber.emit('render', state);
-            }
-            else
-            {
-                const state = appInstance.state.updateState((state) => {
-                    return {
-                        ...state,
-                        stepsVariantData: [{...test_graph}],
-                        graphSkeleton: [...test_graph.edges],
-                    }
-                });
-
-                //appInstance.subscriber.emit('render', appInstance.state.getState());
-            }
-
             const root = document.getElementById('jsLab');
 
             // основная функция для рендеринга
             const render = (state) => {
                 console.log('state', state);
                 const templateData = {
-                    currentStep: state.currentStep,
-                    currentMinWeight: state.currentMinWeight,
-                    selectedNodesVariantData: state.selectedNodesVariantData,
-                    currentMinWeightData: state.currentMinWeightData,
                     isLabComplete: state.isLabComplete,
-                    maxFlow: state.maxFlow,
                 };
 
                 renderTemplate(root, getHTML(templateData));

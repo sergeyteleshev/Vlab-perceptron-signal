@@ -17,9 +17,7 @@ const test_graph = {
 const test_graph_2 = {
     nodes: [0,1,2,3,4],
     nodesLevel: [1, 1, 2, 2, 3],
-    nodesValue: [
-        [1, 0, 0, 0, 0],
-    ],
+    nodesValue: [1, 0, null, null, null],
     edges: [
         [0, 0, 1, 1, 0],
         [0, 0, 1, 1, 0],
@@ -41,6 +39,7 @@ function dataToSigma(data) {
     let nodes = data.nodes;
     let nodesLevel = data.nodesLevel;
     let edgeWeight = data.edgeWeight;
+    let nodesValue = data.nodesValue;
     let resultEdges = [];
     let resultNodes = [];
     let nodesLevelAmount = [];
@@ -60,6 +59,7 @@ function dataToSigma(data) {
     let yCenter = maxLevel / 2;
 
     for (let i = 0; i < nodes.length; i++) {
+        let nodeValue = nodesValue[i] !== null ? `(I${i} = ${nodesValue[i]})` : "";
 
         //рисует всё равно криво: порядок нод не тот по вертикали, но хотя бы выравнено, лол
         if(i === 0 || i === nodes.length - 1)
@@ -84,7 +84,7 @@ function dataToSigma(data) {
 
         resultNodes[i] = {
             id: "n" + i,
-            label:  i.toString(),
+            label:  `${i.toString()} ${nodeValue}`,
             x: nodesLevel[i],
             y: yLevel,
             size: 4,
@@ -128,7 +128,7 @@ function getHTML(templateData) {
                     <td colspan="2">
                         <div class="lab-header">
                             <div></div>
-                            <span>Ток сигнала в перцептроне Роттенберга</span>
+                            <span>Ток сигнала в перцептроне Розенблатга</span>
                             <!-- Button trigger modal -->
                             <button type="button" class="btn btn-info" data-toggle="modal" data-target="#exampleModalScrollable">
                               Справка
@@ -187,15 +187,22 @@ function getHTML(templateData) {
                             </div>  
                             <table class="steps-table">
                                 <tr>
-                                    <th>№</th>
-                                    <th>Пройденный путь</th>
-                                    <th>Минимальный поток итерации</th>
+                                    <th>№ нейрона</th>
+                                    <th>Формула входного сигнала</th>
+                                    <th>Значение входного сигнала</th>
+                                    <th>Значение выходного сигнала</th>
                                 </tr>                        
                                 ${tableData}                                        
                             </table>  
                             <div class="step-number-input">
-                                <span>Минимальный поток текущей итерации:</span>
-                                <input placeholder="Минимальный вес ребра из пути" value="${templateData.currentMinWeight}" type="number" class="textInputGray"/>
+                                <span>Формула входного сигнала нейрона:</span>
+                                <input value="${templateData.currentMinWeight}" type="text" class="textInputGray"/>
+                                
+                                <span>Значение входного сигнала нейрона:</span>
+                                <input value="${templateData.currentMinWeight}" type="number" class="textInputGray"/>
+                                
+                                <span>Значение выходного сигнала нейрона:</span>
+                                <input value="${templateData.currentMinWeight}" type="number" class="textInputGray"/>
                                 
                                 <input type="button" value="Завершить" class="btnGray completeBtn"/>
                             </div>
@@ -218,6 +225,8 @@ function initState() {
     let _state = {
         currentNodeSection: [],
         isLabComplete: false,
+        currentSelectedNode: "",
+
     };
 
     return {
