@@ -34,7 +34,7 @@ const test_graph_2 = {
     ],
 };
 
-function dataToSigma(data) {
+function dataToSigma(data, currentSelectedNodeId, currentNodeSection) {
     let edges = data.edges;
     let nodes = data.nodes;
     let nodesLevel = data.nodesLevel;
@@ -60,6 +60,8 @@ function dataToSigma(data) {
 
     for (let i = 0; i < nodes.length; i++) {
         let nodeValue = nodesValue[i] !== null ? `(I${i} = ${nodesValue[i]})` : "";
+        let nodeColor = "#000";
+        let nodeId = "n" + i;
 
         //рисует всё равно криво: порядок нод не тот по вертикали, но хотя бы выравнено, лол
         if(i === 0 || i === nodes.length - 1)
@@ -71,6 +73,8 @@ function dataToSigma(data) {
             let dy = nodesLevel[i] / maxLevel;
 
             yLevel = i * dy;
+
+            //todo сделать норм отрисовку по координатам, чтобы все цифры было видно норм
             // if(nodesLevel[i] === nodesLevel[i - 1])
             // {
             //     yLevel = dy * t;
@@ -82,17 +86,32 @@ function dataToSigma(data) {
             // }
         }
 
+        if(typeof nodesValue[i] === "number")
+        {
+            nodeColor = "#28a745";
+        }
+
+        if(currentSelectedNodeId === nodeId)
+        {
+            nodeColor = "#00F";
+        }
+
+        currentNodeSection.map(currentNodeSectionId => {
+           if(currentNodeSectionId === nodeId)
+           {
+               nodeColor = "#FF0";
+           }
+        });
+
         resultNodes[i] = {
-            id: "n" + i,
+            id: nodeId,
             label:  `${i.toString()} ${nodeValue}`,
             x: nodesLevel[i],
             y: yLevel,
             size: 4,
-            color: "#000",
+            color: nodeColor,
         };
     }
-
-    console.log(resultNodes);
 
     for (let i = 0; i < edges.length; i++) {
         for (let j = 0; j < edges.length; j++) {
@@ -103,6 +122,7 @@ function dataToSigma(data) {
                     source: "n" + i,
                     target: "n" + j,
                     label: edgeWeight[i][j].toString(),
+                    color: "#000"
                 });
             }
         }
@@ -195,20 +215,20 @@ function getHTML(templateData) {
                                 ${tableData}                                        
                             </table>  
                             <div class="step-number-input">
-                                <span>Формула входного сигнала нейрона:</span>
-                                <input value="${templateData.currentMinWeight}" type="text" class="textInputGray"/>
+                                <span>Формула входного сигнала нейрона:</span>                               
+                                <input value="${templateData.currentNeuronInputSignalFormula}" type="text" id="currentNeuronInputSignalFormula" class="textInputGray"/>
                                 
                                 <span>Значение входного сигнала нейрона:</span>
-                                <input value="${templateData.currentMinWeight}" type="number" class="textInputGray"/>
+                                <input value="${templateData.currentNeuronInputSignalValue}" type="number" id="currentNeuronInputSignalValue" class="textInputGray"/>
                                 
                                 <span>Значение выходного сигнала нейрона:</span>
-                                <input value="${templateData.currentMinWeight}" type="number" class="textInputGray"/>
+                                <input value="${templateData.currentNeuronOutputSignalValue}" type="number" id="currentNeuronOutputSignalValue" class="textInputGray"/>
                                 
                                 <input type="button" value="Завершить" class="btnGray completeBtn"/>
                             </div>
                             <div class="maxFlow">
                                 <span>Ошибка:</span>
-                                <input type='number' ${!templateData.isLabComplete ? "disabled" : ""} class='maxFlow-input' value="${templateData.maxFlow}"'/>                       
+                                <input type='number' ${!templateData.isLabComplete ? "disabled" : ""} class='maxFlow-input' id="error" value="${templateData.error}"'/>                       
                             </div>                                                                                                                                            
                         </div>
                     </td>
@@ -225,8 +245,13 @@ function initState() {
     let _state = {
         currentNodeSection: [],
         isLabComplete: false,
-        currentSelectedNode: "",
-
+        neuronsTableData: [],
+        currentSelectedNodeId: "",
+        currentNeuronInputSignalFormula: "",
+        currentNeuronInputSignalValue: null,
+        currentNeuronOutputSignalValue: null,
+        error: null,
+        isSelectingNodesModeActivated: false,
     };
 
     return {
@@ -267,11 +292,44 @@ function App() {
 
 function bindActionListeners(appInstance)
 {
-    document.getElementsByClassName("maxFlow-input")[0].addEventListener('change', () => {
+    document.getElementById("error").addEventListener('change', () => {
         const state = appInstance.state.updateState((state) => {
             return {
                 ...state,
-                maxFlow: document.getElementsByClassName("maxFlow-input")[0].value,
+                error: document.getElementById("error").value,
+            }
+        });
+
+        appInstance.subscriber.emit('render', state);
+    });
+
+    document.getElementById("currentNeuronOutputSignalValue").addEventListener('change', () => {
+        const state = appInstance.state.updateState((state) => {
+            return {
+                ...state,
+                currentNeuronOutputSignalValue: document.getElementById("currentNeuronOutputSignalValue").value,
+            }
+        });
+
+        appInstance.subscriber.emit('render', state);
+    });
+
+    document.getElementById("currentNeuronInputSignalFormula").addEventListener('change', () => {
+        const state = appInstance.state.updateState((state) => {
+            return {
+                ...state,
+                currentNeuronInputSignalFormula: document.getElementById("currentNeuronInputSignalFormula").value,
+            }
+        });
+
+        appInstance.subscriber.emit('render', state);
+    });
+
+    document.getElementById("currentNeuronInputSignalValue").addEventListener('change', () => {
+        const state = appInstance.state.updateState((state) => {
+            return {
+                ...state,
+                currentNeuronInputSignalValue: document.getElementById("currentNeuronInputSignalValue").value,
             }
         });
 
@@ -324,18 +382,6 @@ function bindActionListeners(appInstance)
         });
 
         // перересовываем приложение
-        appInstance.subscriber.emit('render', state);
-        renderDag(state, appInstance);
-    });
-
-    document.getElementsByClassName("textInputGray")[0].addEventListener('change', () => {
-        const state = appInstance.state.updateState((state) => {
-            return {
-                ...state,
-                currentMinWeight: document.getElementsByClassName("textInputGray")[0].value,
-            };
-        });
-
         appInstance.subscriber.emit('render', state);
         renderDag(state, appInstance);
     });
@@ -429,7 +475,7 @@ function renderDag(state, appInstance) {
         },
     });
 
-    let testData = dataToSigma(test_graph_2);
+    let testData = dataToSigma(test_graph_2, state.currentSelectedNodeId, state.currentNodeSection);
 
     testData.nodes.map(node => {
         s.graph.addNode(node);
@@ -440,43 +486,66 @@ function renderDag(state, appInstance) {
     });
 
     s.bind('clickNode', (res) => {
-        console.log(res);
-
         const state = appInstance.state.updateState((state) => {
-            let currentNodeSectionCopy = [...state.currentNodeSection];
-            //todo доделай блин
-            if(currentNodeSectionCopy.length === 0)
-            {
-                currentNodeSectionCopy.push(res.data.node.id);
-            }
-            else if(currentNodeSectionCopy.length === 1)
-            {
-                currentNodeSectionCopy.map((nodeId, index) => {
-                   if(nodeId === res.data.node.id)
-                   {
-                       currentNodeSectionCopy.splice(index, 1);
-                   }
-                   //в массиве 2 уже 2 элемента
-                   else
-                   {
-                       currentNodeSectionCopy.push(res.data.node.id);
-                   }
-                });
-            }
 
-            return {
-                ...state,
-                currentNodeSection: currentNodeSectionCopy,
+            if(state.isSelectingNodesModeActivated)
+            {
+                let currentNodeSectionCopy = [...state.currentNodeSection];
+                let isNodeInList = false;
+
+                currentNodeSectionCopy.map((nodeId,index)=> {
+                    if(nodeId === res.data.node.id)
+                    {
+                        currentNodeSectionCopy.splice(index, 1);
+                        isNodeInList = true;
+                        return;
+                    }
+                });
+
+                if(!isNodeInList && res.data.node.id !== state.currentSelectedNodeId)
+                {
+                    currentNodeSectionCopy.push(res.data.node.id);
+                }
+                else if (res.data.node.id === state.currentSelectedNodeId)
+                {
+                    return {
+                        ...state,
+                        currentNodeSection: [],
+                        currentSelectedNodeId: "",
+                        isSelectingNodesModeActivated: false,
+                    }
+                }
+
+                return {
+                    ...state,
+                    currentNodeSection: currentNodeSectionCopy,
+                }
+            }
+            else
+            {
+                if(state.currentSelectedNodeId === res.data.node.id)
+                {
+                    return {
+                        ...state,
+                        currentSelectedNodeId: "",
+                        isSelectingNodesModeActivated: false,
+                    }
+                }
+                else
+                {
+                    return {
+                        ...state,
+                        currentSelectedNodeId: res.data.node.id,
+                        isSelectingNodesModeActivated: true,
+                    }
+                }
             }
         });
 
-        console.log(state);
         appInstance.subscriber.emit('render', state);
     });
 
     s.refresh();
-
-    console.log(testData);
 }
 
 function init_lab() {
@@ -498,6 +567,14 @@ function init_lab() {
                 console.log('state', state);
                 const templateData = {
                     isLabComplete: state.isLabComplete,
+                    currentNodeSection: state.currentNodeSection,
+                    neuronsTableData: state.neuronsTableData,
+                    currentSelectedNodeId: state.currentSelectedNodeId,
+                    currentNeuronInputSignalFormula: state.currentNeuronInputSignalFormula,
+                    currentNeuronInputSignalValue: state.currentNeuronInputSignalValue,
+                    currentNeuronOutputSignalValue: state.currentNeuronOutputSignalValue,
+                    error: state.error,
+                    isSelectingNodesModeActivated: state.isSelectingNodesModeActivated,
                 };
 
                 renderTemplate(root, getHTML(templateData));
@@ -506,8 +583,6 @@ function init_lab() {
             };
 
             appInstance.subscriber.subscribe('render', render);
-
-            // основная функция для рендеринга
 
             // инициализируем первую отрисовку
             appInstance.subscriber.emit('render', appInstance.state.getState());
