@@ -317,3 +317,10 @@ input::-webkit-inner-spin-button {
 input[type=number] {
     -moz-appearance: textfield;
 }
+
+.tableInputData
+{
+    width: 100%;
+    height: 100%;
+    border: none;
+}
