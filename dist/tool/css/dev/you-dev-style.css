@@ -211,6 +211,16 @@ body
     align-items: flex-start;
 }
 
+.step-number-input span
+{
+    margin-top: 10px;
+}
+
+.step-number-input input[type="button"]
+{
+    margin-top: 15px;
+}
+
 .maxFlow
 {
     margin-top: 20px;
@@ -228,7 +238,6 @@ body
     align-items: flex-start;
     margin-top: 20px;
     width: 100%;
-    height: 130px;
     justify-content: space-between;
 }
 
@@ -295,4 +304,23 @@ body
 .hideDiv
 {
     display: none;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.tableInputData
+{
+    width: 100%;
+    height: 100%;
+    border: none;
 }

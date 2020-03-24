@@ -17,7 +17,7 @@ const test_graph = {
 const test_graph_2 = {
     nodes: [0,1,2,3,4],
     nodesLevel: [1, 1, 2, 2, 3],
-    nodesValue: [1, 0, null, null, null],
+    nodesValue: [1, 0, null, 3, null],
     edges: [
         [0, 0, 1, 1, 0],
         [0, 0, 1, 1, 0],
@@ -145,20 +145,12 @@ function dataToSigma(state) {
 
 function getHTML(templateData) {
     let tableData = "";
+
     let countInvalidNodesValue = 0;
 
-
-    console.log(templateData.nodesValue);
-
-    //todo сделать автоматически подсветку поля ошибки для ввода. хуй знает почему не работает каунтер ниже.
-    for(let j = 0; j < templateData.nodesValue; j++)
-    {
-        console.log(templateData.nodesValue[j]);
-        if(templateData.nodesValue[j] !== null)
-            countInvalidNodesValue += 1;
+    for(let i=0, l = templateData.nodesValue.length; i < l; i++){
+        countInvalidNodesValue += (templateData.nodesValue[i] === null) ? 1 : 0;
     }
-
-    console.log(countInvalidNodesValue);
 
     for(let i = 0; i < templateData.neuronsTableData.length; i++)
     {
@@ -179,21 +171,19 @@ function getHTML(templateData) {
     }
 
     tableData += `<tr>
-            <td>
-                ${templateData.currentSelectedNodeId ? templateData.currentSelectedNodeId : ""}
-            </td>
-            <td>
-                <input id="currentNeuronInputSignalFormula" placeholder="Введите числовую формулу" class="tableInputData" type="text" value="${templateData.currentNeuronInputSignalFormula}"/>
-            </td>
-            <td>
-                <input id="currentNeuronInputSignalValue" placeholder="Введите число" class="tableInputData" type="number" value="${templateData.currentNeuronInputSignalValue}"/>
-            </td>
-            <td>
-                <input id="currentNeuronOutputSignalValue" placeholder="Введите число" class="tableInputData" type="number" value="${templateData.currentNeuronOutputSignalValue}"/>
-            </td>
+        <td>
+            ${templateData.currentSelectedNodeId ? templateData.currentSelectedNodeId : ""}
+        </td>
+        <td>
+            <input id="currentNeuronInputSignalFormula" placeholder="Введите числовую формулу" class="tableInputData" type="text" value="${templateData.currentNeuronInputSignalFormula}"/>
+        </td>
+        <td>
+            <input id="currentNeuronInputSignalValue" placeholder="Введите число" class="tableInputData" type="number" value="${templateData.currentNeuronInputSignalValue}"/>
+        </td>
+        <td>
+            <input id="currentNeuronOutputSignalValue" placeholder="Введите число" class="tableInputData" type="number" value="${templateData.currentNeuronOutputSignalValue}"/>
+        </td>
     </tr>`;
-
-    let minusStepButton = `<input type="button" class="minusStep btn btn-danger" value="-">`;
 
     return `
         <div class="lab">
@@ -257,7 +247,7 @@ function getHTML(templateData) {
                         <div class="steps">
                             <div class="steps-buttons">
                                 <input id="addStep" class="addStep btn btn-success" type="button" value="+"/>
-                                ${templateData.currentStep === 0 ? "" : minusStepButton}
+                                <input type="button" class="minusStep btn btn-danger" value="-">
                             </div>  
                             <table class="steps-table">
                                 <tr>
@@ -286,9 +276,13 @@ function renderTemplate(element, html) {
 function initState() {
     let _state = {
         currentNodeSection: [],
-        isLabComplete: false,
         neuronsTableData: [],
         currentSelectedNodeId: "",
+        prevSelectedNodeId: "",
+        prevNeuronInputSignalFormula: "",
+        prevNeuronInputSignalValue: "",
+        prevNeuronOutputSignalValue: "",
+        prevNodeSection: [],
         currentNeuronInputSignalFormula: "",
         currentNeuronInputSignalValue: "",
         currentNeuronOutputSignalValue: "",
@@ -340,7 +334,7 @@ function bindActionListeners(appInstance)
         const state = appInstance.state.updateState((state) => {
             return {
                 ...state,
-                error: document.getElementById("error").value,
+                error: Number(document.getElementById("error").value),
             }
         });
 
@@ -388,6 +382,12 @@ function bindActionListeners(appInstance)
             let nodesValue = state.nodesValue.slice();
             let currentSelectedNodeIdNumber = state.currentSelectedNodeId.match(/(\d+)/)[0];
 
+            let prevSelectedNodeId = state.currentSelectedNodeId;
+            let prevNeuronInputSignalFormula = state.currentNeuronInputSignalFormula ;
+            let prevNeuronInputSignalValue = state.currentNeuronInputSignalValue ;
+            let prevNeuronOutputSignalValue = state.currentNeuronOutputSignalValue;
+            let prevNodeSection = state.currentNodeSection.slice();
+
             if(state.currentSelectedNodeId.length > 0 && state.currentNeuronInputSignalFormula.length > 0
                 && !isNaN(state.currentNeuronInputSignalValue) && !isNaN(state.currentNeuronOutputSignalValue)
                 && state.currentNodeSection.length > 0)
@@ -414,6 +414,11 @@ function bindActionListeners(appInstance)
                 currentStep,
                 neuronsTableData,
                 nodesValue,
+                prevSelectedNodeId,
+                prevNeuronInputSignalFormula,
+                prevNeuronInputSignalValue,
+                prevNeuronOutputSignalValue,
+                prevNodeSection,
                 currentSelectedNodeId: "",
                 currentNeuronInputSignalFormula: "",
                 currentNeuronInputSignalValue: "",
@@ -433,19 +438,30 @@ function bindActionListeners(appInstance)
         const state = appInstance.state.updateState((state) => {
             if(state.currentStep > 0)
             {
-                let neuronsTableData = JSON.parse(JSON.stringify(state.neuronsTableData));
+                let neuronsTableData = state.neuronsTableData.slice();
+                let currentSelectedNodeIdNumber = Number(state.prevSelectedNodeId.match(/(\d+)/)[0]);
                 neuronsTableData.pop();
+                let nodesValueCopy = state.nodesValue.slice();
+                nodesValueCopy[currentSelectedNodeIdNumber] = null;
+                let prevNeuronInputSignalFormula = state.currentNeuronInputSignalFormula;
+                let prevNeuronInputSignalValue = state.currentNeuronInputSignalValue;
+                let prevNeuronOutputSignalValue = state.currentNeuronOutputSignalValue;
+                let prevNodeSection = state.currentNodeSection;
 
                 return  {
                     ...state,
                     neuronsTableData,
+                    prevNeuronInputSignalFormula,
+                    prevNeuronInputSignalValue,
+                    prevNeuronOutputSignalValue,
                     currentStep: state.currentStep - 1,
-                    currentSelectedNodeId: "",
-                    currentNeuronInputSignalFormula: "",
-                    currentNeuronInputSignalValue: "",
-                    currentNeuronOutputSignalValue: "",
-                    currentNodeSection: [],
+                    currentSelectedNodeId: state.prevSelectedNodeId,
+                    currentNeuronInputSignalFormula: state.prevNeuronInputSignalFormula,
+                    currentNeuronInputSignalValue: state.prevNeuronInputSignalValue,
+                    currentNeuronOutputSignalValue: state.prevNeuronOutputSignalValue,
+                    currentNodeSection: state.prevNodeSection,
                     isSelectingNodesModeActivated: false,
+                    nodesValue: nodesValueCopy,
                 }
             }
 
@@ -555,6 +571,38 @@ function init_lab() {
 
         //Инициализация ВЛ
         init: function () {
+            if(document.getElementById("preGeneratedCode"))
+            {
+                if(document.getElementById("preGeneratedCode").value !== "")
+                {
+                    const state = appInstance.state.updateState((state) => {
+                        console.log(document.getElementById("preGeneratedCode").value, 'beforeParse');
+                        let graph = JSON.parse(document.getElementById("preGeneratedCode").value);
+                        console.log(graph);
+                        return {
+                            ...state,
+                            // stepsVariantData: [{...graph}],
+                            // graphSkeleton: [...graph.edges],
+                        }
+                    });
+                }
+
+                //appInstance.subscriber.emit('render', state);
+            }
+            else
+            {
+                const state = appInstance.state.updateState((state) => {
+                    return {
+                        ...state,
+                        stepsVariantData: [{...test_graph}],
+                        graphSkeleton: [...test_graph.edges],
+                    }
+                });
+
+                //appInstance.subscriber.emit('render', appInstance.state.getState());
+            }
+
+
             const root = document.getElementById('jsLab');
 
             // основная функция для рендеринга
