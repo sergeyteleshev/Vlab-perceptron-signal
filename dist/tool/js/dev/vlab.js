@@ -50,8 +50,11 @@ function dataToSigma(state) {
     let maxLevel = 1;
     let yLevel = 1;
 
-    for (let i = 0; i < nodesLevel.length; i++) {
-        nodesLevelAmount[nodesLevel[i]] = 1 + (nodesLevelAmount[nodesLevel[i]] || 0);
+    if(nodesLevel)
+    {
+        for (let i = 0; i < nodesLevel.length; i++) {
+            nodesLevelAmount[nodesLevel[i]] = 1 + (nodesLevelAmount[nodesLevel[i]] || 0);
+        }
     }
 
     nodesLevelAmount.map(el => {
@@ -148,8 +151,11 @@ function getHTML(templateData) {
 
     let countInvalidNodesValue = 0;
 
-    for(let i=0, l = templateData.nodesValue.length; i < l; i++){
-        countInvalidNodesValue += (templateData.nodesValue[i] === null) ? 1 : 0;
+    if(templateData.nodesValue)
+    {
+        for(let i=0, l = templateData.nodesValue.length; i < l; i++){
+            countInvalidNodesValue += (templateData.nodesValue[i] === null) ? 1 : 0;
+        }
     }
 
     for(let i = 0; i < templateData.neuronsTableData.length; i++)
@@ -289,7 +295,7 @@ function initState() {
         error: null,
         isSelectingNodesModeActivated: false,
         currentStep: 0,
-        ...test_graph_2,
+        // ...test_graph_2,
     };
 
     return {
@@ -581,44 +587,38 @@ function init_lab() {
                         console.log(graph);
                         return {
                             ...state,
-                            // stepsVariantData: [{...graph}],
-                            // graphSkeleton: [...graph.edges],
+                            ...graph,
                         }
                     });
                 }
 
-                //appInstance.subscriber.emit('render', state);
+                const root = document.getElementById('jsLab');
+
+                // основная функция для рендеринга
+                const render = (state) => {
+                    console.log('state', state);
+                    renderTemplate(root, getHTML({...state}));
+                    renderDag(state, appInstance);
+                    bindActionListeners(appInstance);
+                };
+
+                appInstance.subscriber.subscribe('render', render);
+
+                // инициализируем первую отрисовку
+                appInstance.subscriber.emit('render', appInstance.state.getState());
             }
             else
             {
-                const state = appInstance.state.updateState((state) => {
-                    return {
-                        ...state,
-                        stepsVariantData: [{...test_graph}],
-                        graphSkeleton: [...test_graph.edges],
-                    }
-                });
+                // const state = appInstance.state.updateState((state) => {
+                //     return {
+                //         ...state,
+                //         stepsVariantData: [{...test_graph}],
+                //         graphSkeleton: [...test_graph.edges],
+                //     }
+                // });
 
                 //appInstance.subscriber.emit('render', appInstance.state.getState());
             }
-
-
-            const root = document.getElementById('jsLab');
-
-            // основная функция для рендеринга
-            const render = (state) => {
-                console.log('state', state);
-
-
-                renderTemplate(root, getHTML({...state}));
-                renderDag(state, appInstance);
-                bindActionListeners(appInstance);
-            };
-
-            appInstance.subscriber.subscribe('render', render);
-
-            // инициализируем первую отрисовку
-            appInstance.subscriber.emit('render', appInstance.state.getState());
         },
         getCondition: function () {
         },

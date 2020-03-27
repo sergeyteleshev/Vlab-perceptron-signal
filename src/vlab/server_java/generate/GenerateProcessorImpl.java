@@ -4,12 +4,8 @@ import org.json.JSONObject;
 import rlcp.generate.GeneratingResult;
 import rlcp.server.processor.generate.GenerateProcessor;
 
-import java.sql.SQLOutput;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Random;
-import java.util.logging.SocketHandler;
-import java.util.Arrays;
 
 /**
  * Simple GenerateProcessor implementation. Supposed to be changed as needed to
@@ -25,19 +21,13 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         final Random random = new Random();
         JSONObject graph = new JSONObject();
 
-        int maxInputNeurons = 2;
-        int minInputNeurons = 1;
-
-        int maxOutputNeurons = 2;
-        int minOutputNeurons = 1;
-
         int minInputNeuronValue = 0;
         int maxInputNeuronValue = 1;
-        int inputNeuronsAmount = minInputNeurons + (int)(Math.random() * ((maxInputNeurons - minInputNeurons) + 1));
-        int outputNeuronsAmount = minOutputNeurons + (int)(Math.random() * ((maxOutputNeurons - minOutputNeurons) + 1));
+        int inputNeuronsAmount = 2;
+        int outputNeuronsAmount = 1;
 
-        int amountOfHiddenLayers = 4;
-        int amountOfNodesInHiddenLayer = 8;
+        int amountOfHiddenLayers = 3;
+        int amountOfNodesInHiddenLayer = 6;
         int[] hiddenLayerNodesAmount = new int[amountOfHiddenLayers];
         int nodesPerHiddenLayer = (int) Math.round(amountOfNodesInHiddenLayer / amountOfHiddenLayers);
         int currentHiddenLayer = 2;
@@ -46,7 +36,8 @@ public class GenerateProcessorImpl implements GenerateProcessor {
 
         int[][] edges = new int[nodesAmount][nodesAmount];
         int[] nodes = new int[nodesAmount];
-        float[] nodesValue = new float[nodesAmount];
+        Object[] nodesValue = new Object[nodesAmount];
+        float[][] edgeWeight = new float[nodesAmount][nodesAmount];
         int[] nodesLevel = new int[nodesAmount];
 
         for(int i = inputNeuronsAmount; i < inputNeuronsAmount + amountOfNodesInHiddenLayer; i++)
@@ -71,7 +62,8 @@ public class GenerateProcessorImpl implements GenerateProcessor {
                 for(int r = 0; r < inputNeuronsAmount; r++)
                 {
                     nodesLevel[r] = 1;
-                    nodesValue[r] = minInputNeuronValue + (float)(Math.random() * ((maxInputNeuronValue - minInputNeuronValue) + 1));
+                    int nodesLevelTemp = (int) ((int) minInputNeuronValue + (float)(Math.random() * ((maxInputNeuronValue - minInputNeuronValue) + 1)) * 100);
+                    nodesValue[r] = (float) nodesLevelTemp / 100;
                 }
 
                 for(int e = 0; e < nodesAmount; e++)
@@ -95,14 +87,25 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         for(int i = 0; i < nodesAmount; i++)
         {
             int currentNodeLevel = nodesLevel[i];
-            ArrayList<Integer> nextLayerIndexes = this.findIndexesByValueInArray(nodesLevel, currentNodeLevel+1);
 
-            for(int j = 0; i < nextLayerIndexes.size(); j++)
+            for(int j = 0; j < nodesLevel.length; j++)
             {
-                edges[i][nextLayerIndexes.get(j)] = 1;
+                if(nodesLevel[j] == currentNodeLevel + 1)
+                {
+                    edges[i][j] = 1;
+                    // от -1 до 1 с двумя знаками после запятой
+                    edgeWeight[i][j] = (int)(((float)(Math.random() * ((1 + 1) + 1)) - 1) * 100);
+                    edgeWeight[i][j] = (float) (edgeWeight[i][j]) / 100;
+                }
+                else
+                {
+                    edges[i][j] = 0;
+                    edgeWeight[i][j] = 0;
+                }
             }
         }
 
+        graph.put("edgeWeight", edgeWeight);
         graph.put("nodes", nodes);
         graph.put("nodesLevel", nodesLevel);
         graph.put("nodesValue", nodesValue);
@@ -113,14 +116,5 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         text = "Найдите максимальный поток из вершины " + Integer.toString(nodes[0]) + " в вершину  " + Integer.toString(nodes.length - 1);
 
         return new GeneratingResult(text, code, instructions);
-    }
-
-    private ArrayList<Integer> findIndexesByValueInArray(int[] nodesLevel, int value) {
-        ArrayList<Integer> result = new ArrayList<>();
-        for(int i=0; i < nodesLevel.length; i++)
-            if(nodesLevel[i] == value)
-                result.add(i);
-
-        return result;
     }
 }
