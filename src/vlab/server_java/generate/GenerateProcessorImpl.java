@@ -26,8 +26,8 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         int inputNeuronsAmount = 2;
         int outputNeuronsAmount = 1;
 
-        int amountOfHiddenLayers = 3;
-        int amountOfNodesInHiddenLayer = 6;
+        int amountOfHiddenLayers = 1;
+        int amountOfNodesInHiddenLayer = 2;
         int[] hiddenLayerNodesAmount = new int[amountOfHiddenLayers];
         int nodesPerHiddenLayer = (int) Math.round(amountOfNodesInHiddenLayer / amountOfHiddenLayers);
         int currentHiddenLayer = 2;
@@ -40,48 +40,39 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         float[][] edgeWeight = new float[nodesAmount][nodesAmount];
         int[] nodesLevel = new int[nodesAmount];
 
+        //начальные значения для рецепторов
+        for(int i = 0; i < inputNeuronsAmount; i++)
+        {
+            nodesLevel[i] = 1;
+            int nodesLevelTemp = (int) ((int) minInputNeuronValue + (float)(Math.random() * ((maxInputNeuronValue - minInputNeuronValue) + 1)) * 100);
+            nodesValue[i] = (float) nodesLevelTemp / 100;
+        }
+
+        for(int i = 1; i <= outputNeuronsAmount; i++)
+        {
+            nodesLevel[nodesLevel.length - i] = 1 + amountOfHiddenLayers + 1;
+        }
+
+        //уровни словёв
+        int countTemp = 0;
         for(int i = inputNeuronsAmount; i < inputNeuronsAmount + amountOfNodesInHiddenLayer; i++)
         {
             nodesLevel[i] = currentHiddenLayer;
-            if(i % nodesPerHiddenLayer == 0)
+            countTemp++;
+            if(countTemp % nodesPerHiddenLayer == 0)
             {
                 currentHiddenLayer++;
+            }
+
+            if(currentHiddenLayer == nodesLevel[0]  )
+            {
+                nodesLevel[i] = currentHiddenLayer - 1;
             }
         }
 
         for(int i = 0; i < nodesAmount; i++)
         {
             nodes[i] = i;
-            //рецепторы
-            if (
-                    i < inputNeuronsAmount
-                    && i < inputNeuronsAmount + outputNeuronsAmount
-                    && i < inputNeuronsAmount + outputNeuronsAmount + amountOfNodesInHiddenLayer)
-            {
-                //начальные значения для рецепторов
-                for(int r = 0; r < inputNeuronsAmount; r++)
-                {
-                    nodesLevel[r] = 1;
-                    int nodesLevelTemp = (int) ((int) minInputNeuronValue + (float)(Math.random() * ((maxInputNeuronValue - minInputNeuronValue) + 1)) * 100);
-                    nodesValue[r] = (float) nodesLevelTemp / 100;
-                }
-
-                for(int e = 0; e < nodesAmount; e++)
-                {
-                    if(e > inputNeuronsAmount && e < inputNeuronsAmount + outputNeuronsAmount)
-                        edges[i][e] = random.nextInt(2);
-                }
-            }
-            //скрытые слои
-            else if (i >= inputNeuronsAmount && i < inputNeuronsAmount + outputNeuronsAmount)
-            {
-
-            }
-            //выходные нейроны
-            else if (i >= inputNeuronsAmount + amountOfNodesInHiddenLayer)
-            {
-                nodesLevel[i] = 1 + amountOfHiddenLayers + 1;
-            }
         }
 
         for(int i = 0; i < nodesAmount; i++)
