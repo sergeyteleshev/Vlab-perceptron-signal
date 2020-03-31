@@ -6,6 +6,7 @@ import rlcp.check.ConditionForChecking;
 import rlcp.generate.GeneratingResult;
 import rlcp.server.processor.check.PreCheckProcessor.PreCheckResult;
 import rlcp.server.processor.check.PreCheckResultAwareCheckProcessor;
+import vlab.server_java.Consts;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -22,20 +23,56 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         String comment = "test";
 
         String code = generatingResult.getCode();
-        String generated = generatingResult.getCode();
 
         JSONObject jsonCode = new JSONObject(code);
-        JSONObject jsonGenerate = new JSONObject(generated);
+        JSONObject jsonInstructions = new JSONObject(instructions);
 
-        JSONArray nodes = jsonGenerate.getJSONArray("nodes");
-        JSONArray edges = jsonGenerate.getJSONArray("edges");
+        JSONArray nodes = jsonCode.getJSONArray("nodes");
+        JSONArray edges = jsonCode.getJSONArray("edges");
 
-        JSONArray edgeWeight = jsonGenerate.getJSONArray("edgeWeight");
+        JSONArray edgeWeight = jsonCode.getJSONArray("edgeWeight");
         JSONArray nodesLevel = jsonCode.getJSONArray("nodesLevel");
         JSONArray nodesValue = jsonCode.getJSONArray("nodesValue");
-//        JSONArray neuronsTableData = jsonCode.getJSONArray("neuronsTableData");
+        JSONArray neuronsTableData = jsonInstructions.getJSONArray("neuronsTableData");
+//        double error = jsonInstructions.getDouble("error");
+
+        //нашли значение всех выходных сигналов нейронов
+        for(int i = Consts.inputNeuronsAmount; i < nodes.length(); i++)
+        {
+            double currentNodeValue = 0;
+
+            for(int j = 0; j < edges.getJSONArray(i).length(); j++)
+            {
+                if(edges.getJSONArray(j).getInt(i) == 1)
+                {
+                    currentNodeValue += nodesValue.getDouble(j) * edgeWeight.getJSONArray(j).getDouble(i);
+                }
+            }
+
+            currentNodeValue = getSigmoidValue(currentNodeValue);
+            currentNodeValue = (double) Math.round(currentNodeValue * 100) / 100;
+            nodesValue.put(i, currentNodeValue);
+        }
+
+        for(int i = 0; i < neuronsTableData.length(); i++)
+        {
+            String nodeId = neuronsTableData.getJSONObject(i).getString("nodeId");
+            String nodeFormula = neuronsTableData.getJSONObject(i).getString("neuronInputSignalFormula");
+            double nodeOutputValue = neuronsTableData.getJSONObject(i).getDouble("neuronOutputSignalValue");
+            JSONArray nodeSection = neuronsTableData.getJSONObject(i).getJSONArray("nodeSection");
+        }
 
         return new CheckingSingleConditionResult(points, comment);
+    }
+
+    private double getSigmoidValue(double x)
+    {
+        return (1 / (1 + Math.exp(-x)));
+    }
+
+    private double getHiperbolicTangensValue(double x)
+    {
+        return (2 / (1 + Math.exp(-2 * x)));
     }
 
     @Override

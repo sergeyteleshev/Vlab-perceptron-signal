@@ -1,8 +1,10 @@
 package vlab.server_java.generate;
 
+import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
 import org.json.JSONObject;
 import rlcp.generate.GeneratingResult;
 import rlcp.server.processor.generate.GenerateProcessor;
+import vlab.server_java.Consts;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -21,13 +23,13 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         final Random random = new Random();
         JSONObject graph = new JSONObject();
 
-        int minInputNeuronValue = 0;
-        int maxInputNeuronValue = 1;
-        int inputNeuronsAmount = 2;
-        int outputNeuronsAmount = 1;
+        int minInputNeuronValue = Consts.minInputNeuronValue;
+        int maxInputNeuronValue = Consts.maxInputNeuronValue;
+        int inputNeuronsAmount = Consts.inputNeuronsAmount;
+        int outputNeuronsAmount = Consts.outputNeuronsAmount;
 
-        int amountOfHiddenLayers = 1;
-        int amountOfNodesInHiddenLayer = 2;
+        int amountOfHiddenLayers = Consts.amountOfHiddenLayers;
+        int amountOfNodesInHiddenLayer = Consts.amountOfNodesInHiddenLayer;
         int[] hiddenLayerNodesAmount = new int[amountOfHiddenLayers];
         int nodesPerHiddenLayer = (int) Math.round(amountOfNodesInHiddenLayer / amountOfHiddenLayers);
         int currentHiddenLayer = 2;
