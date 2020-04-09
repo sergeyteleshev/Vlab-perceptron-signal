@@ -294,7 +294,7 @@ function initState() {
         currentNeuronInputSignalFormula: "",
         currentNeuronInputSignalValue: "",
         currentNeuronOutputSignalValue: "",
-        error: null,
+        error: 0,
         isSelectingNodesModeActivated: false,
         currentStep: 0,
         // ...test_graph_2,
@@ -340,6 +340,15 @@ function bindActionListeners(appInstance)
 {
     document.getElementById("error").addEventListener('change', () => {
         const state = appInstance.state.updateState((state) => {
+
+            if(isNaN(document.getElementById("error").value))
+            {
+                return {
+                    ...state,
+                    error: 0,
+                }
+            }
+
             return {
                 ...state,
                 error: Number(document.getElementById("error").value),
