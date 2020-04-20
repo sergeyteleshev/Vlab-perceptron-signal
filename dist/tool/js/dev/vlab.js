@@ -35,6 +35,11 @@ const test_graph_2 = {
 };
 
 function dataToSigma(state) {
+    if(state.edges && state.nodes && state.nodesLevel && state.edgeWeight && state.nodesValue)
+    {
+
+    }
+
     let edges = state.edges;
     let nodes = state.nodes;
     let nodesLevel = state.nodesLevel;
@@ -50,11 +55,8 @@ function dataToSigma(state) {
     let maxLevel = 1;
     let yLevel = 1;
 
-    if(nodesLevel)
-    {
-        for (let i = 0; i < nodesLevel.length; i++) {
-            nodesLevelAmount[nodesLevel[i]] = 1 + (nodesLevelAmount[nodesLevel[i]] || 0);
-        }
+    for (let i = 0; i < nodesLevel.length; i++) {
+        nodesLevelAmount[nodesLevel[i]] = 1 + (nodesLevelAmount[nodesLevel[i]] || 0);
     }
 
     nodesLevelAmount.map(el => {
@@ -292,7 +294,7 @@ function initState() {
         currentNeuronInputSignalFormula: "",
         currentNeuronInputSignalValue: "",
         currentNeuronOutputSignalValue: "",
-        error: null,
+        error: 0,
         isSelectingNodesModeActivated: false,
         currentStep: 0,
         // ...test_graph_2,
@@ -338,6 +340,15 @@ function bindActionListeners(appInstance)
 {
     document.getElementById("error").addEventListener('change', () => {
         const state = appInstance.state.updateState((state) => {
+
+            if(isNaN(document.getElementById("error").value))
+            {
+                return {
+                    ...state,
+                    error: 0,
+                }
+            }
+
             return {
                 ...state,
                 error: Number(document.getElementById("error").value),

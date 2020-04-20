@@ -1,12 +1,9 @@
 package vlab.server_java.generate;
 
-import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
 import org.json.JSONObject;
 import rlcp.generate.GeneratingResult;
 import rlcp.server.processor.generate.GenerateProcessor;
 import vlab.server_java.Consts;
-
-import java.util.ArrayList;
 import java.util.Random;
 
 /**

@@ -7,4 +7,9 @@ public class Consts {
     public static final int outputNeuronsAmount = 1;
     public static final int amountOfHiddenLayers = 1;
     public static final int amountOfNodesInHiddenLayer = 2;
+
+    public static double doubleToTwoDecimal(double number)
+    {
+        return (double) Math.round(number * 100)  / 100;
+    }
 }
