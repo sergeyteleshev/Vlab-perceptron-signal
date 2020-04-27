@@ -43,21 +43,69 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         JSONArray edgeWeight = jsonCode.getJSONArray("edgeWeight");
         JSONArray nodesLevel = jsonCode.getJSONArray("nodesLevel");
         JSONArray nodesValue = jsonCode.getJSONArray("nodesValue");
-        JSONArray neuronsTableData = jsonInstructions.getJSONArray("neuronsTableData");
 
-        JSONObject serverAnswer = generateRightAnswer(nodes, edges, nodesValue, edgeWeight);
-        JSONObject clientAnswer = new JSONObject(instructions);
+        JSONArray serverAnswer = jsonObjectToJsonArray(generateRightAnswer(nodes, edges, nodesValue, edgeWeight));
+        JSONArray clientAnswer = jsonInstructions.getJSONArray("neuronsTableData");
 
-        double checkError = doubleToTwoDecimal(countError(serverAnswer.getJSONArray("neuronOutputSignalValue").getDouble(serverAnswer.getJSONArray("neuronOutputSignalValue").length() - 1)));
+//        double checkError = doubleToToDecimal(countError(serverAnswer.getJSONArray("neuronOutputSignalValue").getDouble(serverAnswer.getJSONArray("neuronOutputSignalValue").length() - 1)));
 
-        JSONArray test = new JSONArray();
+        double comparePoints = compareAnswers(serverAnswer, clientAnswer, 1);
+
+        comment += " " + String.valueOf(comparePoints);
 
         return new CheckingSingleConditionResult(points, comment);
     }
 
-    private static JSONArray compareAnswers(JSONArray serverAnswer, JSONArray clientAnswer, double pointPercent)
+    private static JSONArray jsonObjectToJsonArray(JSONObject jsonObject)
+    {
+        JSONArray result = new JSONArray();
+        Iterator x = jsonObject.keys();
+        int arraySize = 0;
+        String[] keys = new String[jsonObject.length()];
+
+        if(x.hasNext())
+            arraySize = jsonObject.getJSONArray((String) x.next()).length();
+        else
+            return result;
+
+        int j = 0;
+        while (x.hasNext()) {
+            String key = (String) x.next();
+            keys[j++] = key;
+        }
+
+        for(int i = 0; i < arraySize; i++) {
+            JSONObject currentJsonObject = new JSONObject();
+
+            for(int m = 0; m < keys.length - 1; m++)
+            {
+                Object currentObject = jsonObject.getJSONArray(keys[m]);
+                currentJsonObject.put(keys[m], jsonObject.getJSONArray(keys[m]).get(i));
+            }
+
+            result.put(i, currentJsonObject);
+        }
+
+//        for(int m = 0; m < keys.length - 1; m++)
+//        {
+//            JSONObject currentJsonObject = new JSONObject();
+//            JSONArray currentArray = jsonObject.getJSONArray(keys[m]);
+//
+//            for(int i = 0; i < arraySize; i++) {
+//                currentArray.put(i, currentArray.get(i));
+//            }
+//
+//            currentJsonObject.put(keys[m], currentArray);
+//            result.put(m, currentJsonObject);
+//        }
+
+        return result;
+    }
+
+    private static double compareAnswers(JSONArray serverAnswer, JSONArray clientAnswer, double pointPercent)
     {
         double pointDelta = pointPercent / serverAnswer.length();
+        double points = 0;
 
         JSONArray sortedServerAnswer = sortJsonArrays(serverAnswer.toString(), "nodeId");
         JSONArray sortedClientAnswer = sortJsonArrays(clientAnswer.toString(), "nodeId");
@@ -66,13 +114,6 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         //todo сравнить nodeSection (отсортировать массивы строк) Arrays.sort
         JSONArray sortedServerNodeSection = getJSONArrayByKey(serverAnswer, "nodeSection");
         JSONArray sortedClientNodeSection = getJSONArrayByKey(clientAnswer, "nodeSection");
-
-        //todo убрать?
-        for(int i = 0; i < sortedServerNodeSection.length(); i++)
-        {
-//            sortedServerNodeSection.put(i, sortJsonArrayWithoutKey(sortedServerNodeSection.getJSONObject(i).toString()));
-//            sortedClientNodeSection.put(i, sortJsonArrayWithoutKey(sortedClientNodeSection.getJSONObject(i).toString()));
-        }
 
         for(int i = 0; i < sortedClientAnswer.length(); i++)
         {
@@ -98,7 +139,7 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
             //todo добавить сравнение значение с outputNeuronValue
             try {
                 if(engine.eval(sortedClientAnswer.getJSONObject(i).getString("neuronInputSignalFormula")) ==
-                        engine.eval(sortedServerAnswer.getJSONObject(i).getString("neuronInputSignalFormula")))
+                        sortedServerAnswer.getJSONObject(i).getString("sortedFormula"))
                 {
                     isNeuronInputSignalFormulaCorrect = true;
                 }
@@ -106,12 +147,12 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
                 e.printStackTrace();
             }
 
-
+            points += pointDelta * ((isNeuronInputSignalFormulaCorrect ? 1: 0) + (isNeuronInputSignalValueCorrect ? 1: 0) + (isNeuronOutputSignalValueCorrect ? 1: 0));
 
 //            sortJsonArrays(sortedClientAnswer.getJSONObject("nodeSection").toString(), "ID");
         }
 
-        return sortedClientNodeSection;
+        return points;
     }
 
 
@@ -144,7 +185,6 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         }
         Collections.sort( jsonValues, new Comparator<JSONObject>() {
             //You can change "Name" with "ID" if you want to sort by ID
-
             @Override
             public int compare(JSONObject a, JSONObject b) {
                 String valA = new String();
