@@ -24,12 +24,15 @@ import static vlab.server_java.Consts.outputNeuronsAmount;
  * Simple CheckProcessor implementation. Supposed to be changed as needed to provide
  * necessary Check method support.
  */
+
+//todo косяк с кодировкой
+//todo всё работает. но если не выделить в nodeSection один нейрон, то выдаёт 0.
 public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<String> {
     @Override
     public CheckingSingleConditionResult checkSingleCondition(ConditionForChecking condition, String instructions, GeneratingResult generatingResult) throws Exception {
         //do check logic here
         BigDecimal points = BigDecimal.valueOf(1.0);
-        String comment = "test";
+        String comment = "";
 
         String code = generatingResult.getCode();
 
@@ -49,9 +52,10 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
 
 //        double checkError = doubleToToDecimal(countError(serverAnswer.getJSONArray("neuronOutputSignalValue").getDouble(serverAnswer.getJSONArray("neuronOutputSignalValue").length() - 1)));
 
-        double comparePoints = compareAnswers(serverAnswer, clientAnswer, 1);
-
-        comment += " " + String.valueOf(comparePoints);
+        JSONObject compareResult = compareAnswers(serverAnswer, clientAnswer, 1);
+        double comparePoints = compareResult.getDouble("points");
+        String compareComment = compareResult.getString("comment");
+        comment += String.valueOf(comparePoints) + " " + compareComment;
 
         return new CheckingSingleConditionResult(points, comment);
     }
@@ -62,13 +66,16 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         Iterator x = jsonObject.keys();
         int arraySize = 0;
         String[] keys = new String[jsonObject.length()];
+        int j = 0;
 
         if(x.hasNext())
-            arraySize = jsonObject.getJSONArray((String) x.next()).length();
+        {
+            keys[j++] = (String) x.next();
+            arraySize = jsonObject.getJSONArray(keys[0]).length();
+        }
         else
             return result;
 
-        int j = 0;
         while (x.hasNext()) {
             String key = (String) x.next();
             keys[j++] = key;
@@ -86,46 +93,36 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
             result.put(i, currentJsonObject);
         }
 
-//        for(int m = 0; m < keys.length - 1; m++)
-//        {
-//            JSONObject currentJsonObject = new JSONObject();
-//            JSONArray currentArray = jsonObject.getJSONArray(keys[m]);
-//
-//            for(int i = 0; i < arraySize; i++) {
-//                currentArray.put(i, currentArray.get(i));
-//            }
-//
-//            currentJsonObject.put(keys[m], currentArray);
-//            result.put(m, currentJsonObject);
-//        }
-
         return result;
     }
 
-    private static double compareAnswers(JSONArray serverAnswer, JSONArray clientAnswer, double pointPercent)
+    private static JSONObject compareAnswers(JSONArray serverAnswer, JSONArray clientAnswer, double pointPercent)
     {
         double pointDelta = pointPercent / serverAnswer.length();
         double points = 0;
+        JSONObject result = new JSONObject();
+        StringBuilder comment = new StringBuilder();
 
         JSONArray sortedServerAnswer = sortJsonArrays(serverAnswer.toString(), "nodeId");
         JSONArray sortedClientAnswer = sortJsonArrays(clientAnswer.toString(), "nodeId");
         ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
-
-        //todo сравнить nodeSection (отсортировать массивы строк) Arrays.sort
-        JSONArray sortedServerNodeSection = getJSONArrayByKey(serverAnswer, "nodeSection");
-        JSONArray sortedClientNodeSection = getJSONArrayByKey(clientAnswer, "nodeSection");
 
         for(int i = 0; i < sortedClientAnswer.length(); i++)
         {
             boolean isNeuronInputSignalValueCorrect = false;
             boolean isNeuronOutputSignalValueCorrect = false;
             boolean isNeuronInputSignalFormulaCorrect = false;
+            boolean isNeuronNodeSectionCorrect = false;
 
             //равны входные значения сигнала на конкретный нейрон
-            if(sortedClientAnswer.getJSONObject(i).getDouble("neuronInputSignalValue") !=
+            if(sortedClientAnswer.getJSONObject(i).getDouble("neuronInputSignalValue") ==
                     sortedServerAnswer.getJSONObject(i).getDouble("neuronInputSignalValue"))
             {
                 isNeuronInputSignalValueCorrect = true;
+            }
+            else
+            {
+                comment.append(" Неверное значение входного сигнала нейрона в ").append(Integer.toString(i + 1)).append(" строке таблицы.");
             }
 
             //равны выходные значения сигнала на конкретный нейрон
@@ -134,25 +131,51 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
             {
                 isNeuronOutputSignalValueCorrect = true;
             }
+            else
+            {
+                comment.append(" Неверное значение выходного сигнала нейрона в ").append(Integer.toString(i + 1)).append(" строке таблицы.");
+            }
 
             //если рассчётные значения в поле инпута формулы равны
-            //todo добавить сравнение значение с outputNeuronValue
             try {
-                if(engine.eval(sortedClientAnswer.getJSONObject(i).getString("neuronInputSignalFormula")) ==
-                        sortedServerAnswer.getJSONObject(i).getString("sortedFormula"))
+                double clientCountedFormula = new Double(engine.eval(sortedClientAnswer.getJSONObject(i).getString("neuronInputSignalFormula")).toString());
+                clientCountedFormula = (double) Math.round(clientCountedFormula * 100) / 100;
+                if(clientCountedFormula ==
+                        sortedServerAnswer.getJSONObject(i).getDouble("countedFormula"))
                 {
                     isNeuronInputSignalFormulaCorrect = true;
+                }
+                else
+                {
+                    comment.append(" Неверная формула входного сигнала в ").append(Integer.toString(i + 1)).append(" строке таблицы.");
                 }
             } catch (ScriptException e) {
                 e.printStackTrace();
             }
 
-            points += pointDelta * ((isNeuronInputSignalFormulaCorrect ? 1: 0) + (isNeuronInputSignalValueCorrect ? 1: 0) + (isNeuronOutputSignalValueCorrect ? 1: 0));
+            //если правильно в графе выделил нейроны, из которых сигнал течёт в текущий нейрон по таблице
+            if(compareArrays(sortedClientAnswer.getJSONObject(i).getJSONArray("nodeSection"), sortedServerAnswer.getJSONObject(i).getJSONArray("nodeSection")))
+            {
+                isNeuronNodeSectionCorrect = true;
+            }
+            else
+            {
+                comment.append("Неверно выделены нейроны из которых течёт сигнал в ").append(sortedClientAnswer.getJSONObject(i).getString("nodeId"));
+            }
 
-//            sortJsonArrays(sortedClientAnswer.getJSONObject("nodeSection").toString(), "ID");
+            points += pointDelta * (((isNeuronInputSignalFormulaCorrect ? 1 : 0) + (isNeuronInputSignalValueCorrect ? 1 : 0) + (isNeuronOutputSignalValueCorrect ? 1 : 0) + (isNeuronNodeSectionCorrect ? 1 : 0)) / 4);
         }
 
-        return points;
+        int rowsDiff = serverAnswer.length() - clientAnswer.length();
+        if(rowsDiff > 0)
+        {
+            comment.append("В таблице не хватает ").append(String.valueOf(rowsDiff)).append(" строк");
+        }
+
+        result.put("points", points);
+        result.put("comment", comment.toString());
+
+        return result;
     }
 
 
@@ -211,15 +234,23 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         return sortedJsonArray;
     }
 
-    private static boolean compareArrays(Object[] arr1, Object[] arr2) {
-        if (arr1.length != arr2.length)
+    private static boolean compareArrays(JSONArray arr1, JSONArray arr2) {
+        Object[] normalArr1 = new Object[arr1.length()];
+        Object[] normalArr2 = new Object[arr2.length()];
+
+        for(int i = 0; i < arr1.length(); i++)
         {
-            return false;
+            normalArr1[i] = arr1.get(i);
         }
 
-        Arrays.sort(arr1);
-        Arrays.sort(arr2);
-        return Arrays.equals(arr1, arr2);
+        for(int i = 0; i < arr2.length(); i++)
+        {
+            normalArr2[i] = arr2.get(i);
+        }
+
+        Arrays.sort(normalArr1);
+        Arrays.sort(normalArr2);
+        return Arrays.equals(normalArr1, normalArr2);
     }
 
     private double getSigmoidValue(double x)
