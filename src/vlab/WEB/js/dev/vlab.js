@@ -267,7 +267,7 @@ function getHTML(templateData) {
                                 ${tableData}                                        
                             </table>                             
                             <div class="maxFlow">
-                                <span>Ошибка:</span>
+                                <span>MSE:</span>
                                 <input type='number' ${countInvalidNodesValue !== 0 ? "disabled" : ""} class='maxFlow-input' id="error" value="${templateData.error}"'/>                       
                             </div>                                                                                                                                            
                         </div>
