@@ -26,13 +26,11 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         int outputNeuronsAmount = Consts.outputNeuronsAmount;
 
         int amountOfHiddenLayers = Consts.amountOfHiddenLayers;
-        //todo показывает на графе норм вершины если слоёв больше 2х
         int amountOfNodesInHiddenLayer = Consts.amountOfNodesInHiddenLayer;
         int[] hiddenLayerNodesAmount = new int[amountOfHiddenLayers];
-        int nodesPerHiddenLayer = (int) Math.round(amountOfNodesInHiddenLayer / amountOfHiddenLayers);
         int currentHiddenLayer = 2;
 
-        int nodesAmount = inputNeuronsAmount + outputNeuronsAmount + amountOfNodesInHiddenLayer ; //всего вершин в графе
+        int nodesAmount = inputNeuronsAmount + outputNeuronsAmount + amountOfNodesInHiddenLayer * amountOfHiddenLayers; //всего вершин в графе
 
         int[][] edges = new int[nodesAmount][nodesAmount];
         int[] nodes = new int[nodesAmount];
@@ -55,18 +53,14 @@ public class GenerateProcessorImpl implements GenerateProcessor {
 
         //уровни словёв
         int countTemp = 0;
-        for(int i = inputNeuronsAmount; i < inputNeuronsAmount + amountOfNodesInHiddenLayer; i++)
+        int amountOfNodesBeforeOutputNeurons = inputNeuronsAmount + amountOfNodesInHiddenLayer * amountOfHiddenLayers;
+        for(int i = inputNeuronsAmount; i < amountOfNodesBeforeOutputNeurons; i++)
         {
             nodesLevel[i] = currentHiddenLayer;
             countTemp++;
-            if(countTemp % nodesPerHiddenLayer == 0)
+            if(countTemp % amountOfNodesInHiddenLayer == 0 && countTemp != 0)
             {
                 currentHiddenLayer++;
-            }
-
-            if(currentHiddenLayer == nodesLevel[0]  )
-            {
-                nodesLevel[i] = currentHiddenLayer - 1;
             }
         }
 

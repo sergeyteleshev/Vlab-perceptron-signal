@@ -50,14 +50,11 @@ function dataToSigma(state) {
     let currentSelectedNodeId = state.currentSelectedNodeId;
     let inputNeuronsAmount = state.inputNeuronsAmount;
     let outputNeuronsAmount = state.outputNeuronsAmount;
-    let amountOfHiddenLayers = state.amountOfHiddenLayers;
     let amountOfNodesInHiddenLayer = state.amountOfNodesInHiddenLayer;
     let resultEdges = [];
     let resultNodes = [];
     let nodesLevelAmount = [];
-    let t = 1;
     let maxLevel = 1;
-    let yLevel = 1;
     let xDistanceCoefficient = 2;
     let maxNeuronsInLayer = Math.max(inputNeuronsAmount, outputNeuronsAmount, amountOfNodesInHiddenLayer);
 
@@ -70,8 +67,6 @@ function dataToSigma(state) {
            maxLevel = el;
     });
 
-
-    let yCenter = maxLevel / 2;
 
     for (let i = 0; i < nodes.length; i++) {
         let nodeValue = nodesValue[i] !== null ? `(I${i} = ${nodesValue[i]})` : "";

@@ -25,7 +25,6 @@ import static vlab.server_java.Consts.outputNeuronsAmount;
  * necessary Check method support.
  */
 
-//todo косяк с кодировкой
 //todo всё работает. но если не выделить в nodeSection один нейрон, то выдаёт 0.
 public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<String> {
     @Override
