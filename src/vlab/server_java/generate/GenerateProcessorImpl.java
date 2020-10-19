@@ -26,6 +26,7 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         int outputNeuronsAmount = Consts.outputNeuronsAmount;
 
         int amountOfHiddenLayers = Consts.amountOfHiddenLayers;
+        //todo показывает на графе норм вершины если слоёв больше 2х
         int amountOfNodesInHiddenLayer = Consts.amountOfNodesInHiddenLayer;
         int[] hiddenLayerNodesAmount = new int[amountOfHiddenLayers];
         int nodesPerHiddenLayer = (int) Math.round(amountOfNodesInHiddenLayer / amountOfHiddenLayers);
@@ -101,9 +102,13 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         graph.put("nodesValue", nodesValue);
         graph.put("edges", edges);
         graph.put("hiddenNodesLeft", hiddenLayerNodesAmount);
+        graph.put("inputNeuronsAmount", inputNeuronsAmount);
+        graph.put("outputNeuronsAmount", outputNeuronsAmount);
+        graph.put("amountOfHiddenLayers", amountOfHiddenLayers);
+        graph.put("amountOfNodesInHiddenLayer", amountOfNodesInHiddenLayer);
 
         code = graph.toString();
-        text = "Найдите максимальный поток из вершины " + Integer.toString(nodes[0]) + " в вершину  " + Integer.toString(nodes.length - 1);
+        text = "Найдите значение сигнала в каждом нейроне и посчитайте MSE";
 
         return new GeneratingResult(text, code, instructions);
     }

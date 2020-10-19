@@ -48,12 +48,15 @@ function dataToSigma(state) {
     let neuronsTableData = state.neuronsTableData;
     let currentNodeSection = state.currentNodeSection;
     let currentSelectedNodeId = state.currentSelectedNodeId;
+    let inputNeuronsAmount = state.inputNeuronsAmount;
+    let outputNeuronsAmount = state.outputNeuronsAmount;
+    let amountOfNodesInHiddenLayer = state.amountOfNodesInHiddenLayer;
     let resultEdges = [];
     let resultNodes = [];
     let nodesLevelAmount = [];
-    let t = 1;
     let maxLevel = 1;
-    let yLevel = 1;
+    let xDistanceCoefficient = 2;
+    let maxNeuronsInLayer = Math.max(inputNeuronsAmount, outputNeuronsAmount, amountOfNodesInHiddenLayer);
 
     for (let i = 0; i < nodesLevel.length; i++) {
         nodesLevelAmount[nodesLevel[i]] = 1 + (nodesLevelAmount[nodesLevel[i]] || 0);
@@ -61,38 +64,17 @@ function dataToSigma(state) {
 
     nodesLevelAmount.map(el => {
        if (maxLevel < el)
-        maxLevel = el;
+           maxLevel = el;
     });
 
-    let yCenter = maxLevel / 2;
 
     for (let i = 0; i < nodes.length; i++) {
         let nodeValue = nodesValue[i] !== null ? `(I${i} = ${nodesValue[i]})` : "";
         let nodeColor = "#000";
         let nodeId = "n" + i;
+        let yLevel = 0;
 
-        //рисует всё равно криво: порядок нод не тот по вертикали, но хотя бы выравнено, лол
-        if(i === 0 || i === nodes.length - 1)
-        {
-            yLevel = yCenter;
-        }
-        else
-        {
-            let dy = nodesLevel[i] / maxLevel;
-
-            yLevel = i * dy;
-
-            //todo сделать норм отрисовку по координатам, чтобы все цифры было видно норм
-            // if(nodesLevel[i] === nodesLevel[i - 1])
-            // {
-            //     yLevel = dy * t;
-            //     t++;
-            // }
-            // else
-            // {
-            //     t = 1;
-            // }
-        }
+        yLevel = maxNeuronsInLayer / (nodesLevel[i]) + i + 1 - nodesLevel[i];
 
         for(let j = 0; j > neuronsTableData.length; j++) {
             if (neuronsTableData[j].nodeId === nodeId)
@@ -120,7 +102,7 @@ function dataToSigma(state) {
         resultNodes[i] = {
             id: nodeId,
             label:  `${i.toString()} ${nodeValue}`,
-            x: nodesLevel[i],
+            x: nodesLevel[i] * xDistanceCoefficient,
             y: yLevel,
             size: 4,
             color: nodeColor,
@@ -297,6 +279,10 @@ function initState() {
         error: 0,
         isSelectingNodesModeActivated: false,
         currentStep: 0,
+        inputNeuronsAmount: 0,
+        outputNeuronsAmount: 0,
+        amountOfHiddenLayers: 0,
+        amountOfNodesInHiddenLayer: 0,
         // ...test_graph_2,
     };
 
