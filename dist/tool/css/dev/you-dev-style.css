@@ -226,6 +226,13 @@ body
     margin-top: 20px;
 }
 
+.redrawGraph
+{
+    margin-left: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px
+}
+
 .maxFlow-input
 {
     padding: 5px 10px;

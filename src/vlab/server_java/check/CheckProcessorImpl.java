@@ -2,6 +2,7 @@ package vlab.server_java.check;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,6 +31,8 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
     @Override
     public CheckingSingleConditionResult checkSingleCondition(ConditionForChecking condition, String instructions, GeneratingResult generatingResult) throws Exception {
         //do check logic here
+
+        //todo неправильно считает очки. проверить там где проход по нейронам
         double points = 0;
         String comment = "";
 
@@ -48,7 +51,7 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         JSONArray serverAnswer = jsonObjectToJsonArray(generateRightAnswer(nodes, edges, nodesValue, edgeWeight));
         JSONArray clientAnswer = jsonInstructions.getJSONArray("neuronsTableData");
 
-        double checkError = countMSE(serverAnswer.getJSONObject(serverAnswer.length() - 1).getDouble("neuronOutputSignalValue"));
+        double checkError = countMSE(serverAnswer);
         checkError = (double) Math.round(checkError * 100) / 100;
 
         JSONObject compareResult = compareAnswers(serverAnswer, clientAnswer, Consts.tablePoints);
@@ -194,11 +197,22 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         return result;
     }
 
-
     //todo доделать метод MSE
-    private static double countMSE(double outputNeuronValue)
+    //по дефолту у нас верные значение выходных нейронов это всегда единицы (могут быть и другие на самом деле)
+    private static double countMSE(JSONArray serverAnswer)
     {
-        return Math.pow(1 - outputNeuronValue, 2) / 1;
+        double sum = 0;
+        double mse;
+
+        for (int i = 1; i < outputNeuronsAmount; i++)
+        {
+            double currentOutputNeuronValue = serverAnswer.getJSONObject(serverAnswer.length() - i).getDouble("neuronOutputSignalValue");
+            sum += Math.pow((1 - currentOutputNeuronValue), 2);
+        }
+
+        mse = sum / outputNeuronsAmount;
+
+        return mse;
     }
 
     private static JSONArray getJSONArrayByKey(JSONArray arr, String key)

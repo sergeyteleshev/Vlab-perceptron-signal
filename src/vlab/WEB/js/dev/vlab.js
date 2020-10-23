@@ -35,11 +35,6 @@ const test_graph_2 = {
 };
 
 function dataToSigma(state) {
-    if(state.edges && state.nodes && state.nodesLevel && state.edgeWeight && state.nodesValue)
-    {
-
-    }
-
     let edges = state.edges;
     let nodes = state.nodes;
     let nodesLevel = state.nodesLevel;
@@ -57,6 +52,7 @@ function dataToSigma(state) {
     let maxLevel = 1;
     let xDistanceCoefficient = 2;
     let maxNeuronsInLayer = Math.max(inputNeuronsAmount, outputNeuronsAmount, amountOfNodesInHiddenLayer);
+    let yLevelRandomDisplacement = state.yLevelRandomDisplacement;
 
     for (let i = 0; i < nodesLevel.length; i++) {
         nodesLevelAmount[nodesLevel[i]] = 1 + (nodesLevelAmount[nodesLevel[i]] || 0);
@@ -75,6 +71,7 @@ function dataToSigma(state) {
         let yLevel = 0;
 
         yLevel = maxNeuronsInLayer / (nodesLevel[i]) + i + 1 - nodesLevel[i];
+        yLevel += yLevelRandomDisplacement[i];
 
         for(let j = 0; j > neuronsTableData.length; j++) {
             if (neuronsTableData[j].nodeId === nodeId)
@@ -238,6 +235,9 @@ function getHTML(templateData) {
                             <div class="steps-buttons">
                                 <input id="addStep" class="addStep btn btn-success" type="button" value="+"/>
                                 <input type="button" class="minusStep btn btn-danger" value="-">
+                                <button type="button" class="btn btn-info redrawGraph">
+                                  Перерисовать граф
+                                </button>
                             </div>  
                             <table class="steps-table">
                                 <tr>
@@ -436,6 +436,22 @@ function bindActionListeners(appInstance)
         // renderDag(state, appInstance);
     });
 
+    document.getElementsByClassName('redrawGraph')[0].addEventListener('click', () => {
+        const state = appInstance.state.updateState((state) => {
+            let yLevelRandomDisplacement = state.nodes.map(node => {
+                return 2 + Math.random() * 3; //смещение ноты по Y из-за того, что не видно значение ребра при отрисовке
+            });
+
+            return {
+                ...state,
+                yLevelRandomDisplacement,
+            }
+        });
+
+        // перересовываем приложение
+        appInstance.subscriber.emit('render', state);
+    });
+
     document.getElementsByClassName("minusStep")[0].addEventListener('click', () => {
         // обновляем стейт приложение
         const state = appInstance.state.updateState((state) => {
@@ -582,9 +598,15 @@ function init_lab() {
                         console.log(document.getElementById("preGeneratedCode").value, 'beforeParse');
                         let graph = JSON.parse(document.getElementById("preGeneratedCode").value);
                         console.log(graph);
+                        let nodes = graph.nodes;
+                        let yLevelRandomDisplacement = nodes.map(node => {
+                            return 2 + Math.random() * 3; //смещение ноты по Y из-за того, что не видно значение ребра при отрисовке
+                        });
+
                         return {
                             ...state,
                             ...graph,
+                            yLevelRandomDisplacement,
                         }
                     });
                 }
