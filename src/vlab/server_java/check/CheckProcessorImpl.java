@@ -65,7 +65,7 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         if(checkError == error)
             points += Consts.errorPoints;
         else
-            comment += "Неверно посчитана ошибка. ";
+            comment += "Неверно посчитана ошибка. MSE = " + Double.toString(checkError);
 
         return new CheckingSingleConditionResult(BigDecimal.valueOf(points), comment);
     }
@@ -204,7 +204,7 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         double sum = 0;
         double mse;
 
-        for (int i = 1; i < outputNeuronsAmount; i++)
+        for (int i = 1; i < outputNeuronsAmount + 1; i++)
         {
             double currentOutputNeuronValue = serverAnswer.getJSONObject(serverAnswer.length() - i).getDouble("neuronOutputSignalValue");
             sum += Math.pow((1 - currentOutputNeuronValue), 2);
