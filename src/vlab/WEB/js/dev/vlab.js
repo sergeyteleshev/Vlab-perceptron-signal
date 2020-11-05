@@ -78,6 +78,7 @@ function dataToSigma(state) {
                 nodeColor = "#28a745";
             }
         }
+
         if(typeof nodesValue[i] === "number")
         {
             nodeColor = "#28a745";
@@ -282,7 +283,6 @@ function initState() {
         outputNeuronsAmount: 0,
         amountOfHiddenLayers: 0,
         amountOfNodesInHiddenLayer: 0,
-        // ...test_graph_2,
     };
 
     return {
@@ -432,7 +432,6 @@ function bindActionListeners(appInstance)
 
         // перересовываем приложение
         appInstance.subscriber.emit('render', state);
-        // renderDag(state, appInstance);
     });
 
     document.getElementsByClassName('redrawGraph')[0].addEventListener('click', () => {
@@ -494,7 +493,7 @@ function bindActionListeners(appInstance)
 }
 
 function renderDag(state, appInstance) {
-    var s = new sigma({
+    let s = new sigma({
         renderers: [{
             container: document.getElementById('container'),
             type: "canvas",

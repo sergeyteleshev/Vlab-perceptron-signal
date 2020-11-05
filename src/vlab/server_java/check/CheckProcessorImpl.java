@@ -26,13 +26,11 @@ import static vlab.server_java.Consts.outputNeuronsAmount;
  * necessary Check method support.
  */
 
-//todo всё работает. но если не выделить в nodeSection один нейрон, то выдаёт 0.
 public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<String> {
     @Override
     public CheckingSingleConditionResult checkSingleCondition(ConditionForChecking condition, String instructions, GeneratingResult generatingResult) throws Exception {
         //do check logic here
 
-        //todo неправильно считает очки. проверить там где проход по нейронам
         double points = 0;
         String comment = "";
 
@@ -197,7 +195,6 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         return result;
     }
 
-    //todo доделать метод MSE
     //по дефолту у нас верные значение выходных нейронов это всегда единицы (могут быть и другие на самом деле)
     private static double countMSE(JSONArray serverAnswer)
     {
@@ -309,7 +306,6 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         return new JSONArray(jsonArray);
     }
 
-    //todo сделать для формул генерацию правильного ответа
     private JSONObject generateRightAnswer(JSONArray nodes, JSONArray edges, JSONArray nodesValue, JSONArray edgeWeight)
     {
         ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");

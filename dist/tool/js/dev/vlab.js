@@ -63,7 +63,6 @@ function dataToSigma(state) {
            maxLevel = el;
     });
 
-
     for (let i = 0; i < nodes.length; i++) {
         let nodeValue = nodesValue[i] !== null ? `(I${i} = ${nodesValue[i]})` : "";
         let nodeColor = "#000";
@@ -305,7 +304,7 @@ function subscriber() {
             if (!events[event]) {
                 events[event] = [fn]
             } else {
-                events[event].push(fn);
+                events[event] = [fn];
             }
 
         },

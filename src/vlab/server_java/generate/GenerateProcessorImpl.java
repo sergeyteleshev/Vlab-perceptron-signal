@@ -4,7 +4,6 @@ import org.json.JSONObject;
 import rlcp.generate.GeneratingResult;
 import rlcp.server.processor.generate.GenerateProcessor;
 import vlab.server_java.Consts;
-import java.util.Random;
 
 /**
  * Simple GenerateProcessor implementation. Supposed to be changed as needed to
@@ -17,7 +16,6 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         String text;
         String code;
         String instructions = "instructions";
-        final Random random = new Random();
         JSONObject graph = new JSONObject();
 
         int minInputNeuronValue = Consts.minInputNeuronValue;
