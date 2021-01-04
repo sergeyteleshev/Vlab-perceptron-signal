@@ -67,6 +67,8 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         else
             comment += "Неверно посчитано MSE. MSE = " + Double.toString(checkError);
 
+        points = doubleToTwoDecimal(points);
+
         return new CheckingSingleConditionResult(BigDecimal.valueOf(points), comment);
     }
 
@@ -123,9 +125,11 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
             boolean isNeuronInputSignalFormulaCorrect = false;
             boolean isNeuronNodeSectionCorrect = false;
 
-            //равны входные значения сигнала на конкретный нейрон
-            if(sortedClientAnswer.getJSONObject(i).getDouble("neuronInputSignalValue") ==
-                    sortedServerAnswer.getJSONObject(i).getDouble("neuronInputSignalValue"))
+            //равны входные значения сигнала на конкретный нейрон в рамках окрестности
+            if(sortedClientAnswer.getJSONObject(i).getDouble("neuronInputSignalValue") >= sortedServerAnswer.getJSONObject(i).getDouble("neuronInputSignalValue") - neuronInputSignalValueEpsilon
+                    &&
+                sortedClientAnswer.getJSONObject(i).getDouble("neuronInputSignalValue") <= sortedServerAnswer.getJSONObject(i).getDouble("neuronInputSignalValue") + neuronInputSignalValueEpsilon
+            )
             {
                 isNeuronInputSignalValueCorrect = true;
             }
@@ -134,9 +138,12 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
                 comment.append("Неверное значение входного сигнала нейрона ").append(sortedClientAnswer.getJSONObject(i).getString("nodeId")).append(". ");
             }
 
-            //равны выходные значения сигнала на конкретный нейрон
-            if(sortedClientAnswer.getJSONObject(i).getDouble("neuronOutputSignalValue") ==
-                    sortedServerAnswer.getJSONObject(i).getDouble("neuronOutputSignalValue"))
+            //равны выходные значения сигнала на конкретный нейрон в рамках окрестности
+            if(sortedClientAnswer.getJSONObject(i).getDouble("neuronOutputSignalValue") >=
+                    sortedServerAnswer.getJSONObject(i).getDouble("neuronOutputSignalValue") - neuronOutputSignalValueEpsilon
+                    &&
+                    sortedClientAnswer.getJSONObject(i).getDouble("neuronOutputSignalValue") <= sortedServerAnswer.getJSONObject(i).getDouble("neuronOutputSignalValue") + neuronOutputSignalValueEpsilon
+            )
             {
                 isNeuronOutputSignalValueCorrect = true;
             }
@@ -149,8 +156,10 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
             try {
                 double clientCountedFormula = new Double(engine.eval(sortedClientAnswer.getJSONObject(i).getString("neuronInputSignalFormula")).toString());
                 clientCountedFormula = (double) Math.round(clientCountedFormula * 100) / 100;
-                if(clientCountedFormula ==
-                        sortedServerAnswer.getJSONObject(i).getDouble("countedFormula"))
+                if(clientCountedFormula >= sortedServerAnswer.getJSONObject(i).getDouble("countedFormula") - countedFormulaEpsilon
+                    &&
+                    clientCountedFormula <= sortedServerAnswer.getJSONObject(i).getDouble("countedFormula") + countedFormulaEpsilon
+                )
                 {
                     isNeuronInputSignalFormulaCorrect = true;
                 }
@@ -159,7 +168,8 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
                     comment.append(" Неверная формула входного сигнала нейрона ").append(sortedClientAnswer.getJSONObject(i).getString("nodeId")).append(". ");
                 }
             } catch (ScriptException e) {
-                e.printStackTrace();
+                comment.append(" Некорректная формула расчёта входного сигнала нейрона ").append(sortedClientAnswer.getJSONObject(i).getString("nodeId")).append(". ");;
+                continue;
             }
 
             //если правильно в графе выделил нейроны, из которых сигнал течёт в текущий нейрон по таблице

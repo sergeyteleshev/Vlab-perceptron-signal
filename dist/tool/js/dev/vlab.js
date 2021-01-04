@@ -242,7 +242,8 @@ function getHTML(templateData) {
                 </tr>
                 <tr>
                     <td>
-                        <div class="graphComponent">                          
+                        <div class="graphComponent">     
+                            <button type="button" class="btn btn-info redrawGraph">Перерисовать граф</button>                     
                             <div id="container"></div>
                         </div>
                     </td>
@@ -250,15 +251,12 @@ function getHTML(templateData) {
                         <div class="steps">
                             <div class="steps-buttons">
                                 <input id="addStep" class="addStep btn btn-success" type="button" value="Следующий шаг"/>
-                                <input type="button" class="minusStep btn btn-danger" value="Предыдущий шаг">
-                                <button type="button" class="btn btn-info redrawGraph">
-                                  Перерисовать граф
-                                </button>
+                                <input type="button" class="minusStep btn btn-danger" value="Предыдущий шаг">                                
                             </div>  
                             <table class="steps-table">
                                 <tr>
                                     <th>№ нейрона</th>
-                                    <th>Источник сигнала</th>
+                                    <th>Источники сигнала</th>
                                     <th>Формула входного сигнала</th>
                                     <th>Значение входного сигнала</th>
                                     <th>Значение выходного сигнала</th>
@@ -414,7 +412,7 @@ function bindActionListeners(appInstance)
                 && !isNaN(state.currentNeuronInputSignalValue) && !isNaN(state.currentNeuronOutputSignalValue)
                 && state.currentNodeSection.length > 0)
             {
-                nodesValue[currentSelectedNodeIdNumber] = state.currentNeuronOutputSignalValue;
+                nodesValue[currentSelectedNodeIdNumber] = roundToTwoDecimals(state.currentNeuronOutputSignalValue);
                 currentStep++;
                 neuronsTableData.push({
                     nodeId: state.currentSelectedNodeId,

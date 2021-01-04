@@ -11,6 +11,7 @@ public class Consts {
     public static final double tablePoints = 0.9;
     public static final double neuronOutputSignalValueEpsilon = 0.1;
     public static final double neuronInputSignalValueEpsilon = 0.1;
+    public static final double countedFormulaEpsilon = 0.1;
     public static final double meanSquaredErrorEpsilon = 0.1;
 
     public static double doubleToTwoDecimal(double number)
