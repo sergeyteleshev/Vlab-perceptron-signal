@@ -34,6 +34,11 @@ const test_graph_2 = {
     ],
 };
 
+function roundToTwoDecimals(num)
+{
+    return Math.round(num * 100) / 100
+}
+
 function dataToSigma(state) {
     let edges = state.edges;
     let nodes = state.nodes;
@@ -145,6 +150,7 @@ function getHTML(templateData) {
             <td>
                 ${templateData.neuronsTableData[i].nodeId}
             </td>
+            <td>${templateData.neuronsTableData[i].nodeSection.toString()}</td>
             <td>
                 ${templateData.neuronsTableData[i].neuronInputSignalFormula}
             </td>
@@ -157,20 +163,30 @@ function getHTML(templateData) {
         </tr>`;
     }
 
-    tableData += `<tr>
-        <td>
-            ${templateData.currentSelectedNodeId ? templateData.currentSelectedNodeId : ""}
-        </td>
-        <td>
-            <input id="currentNeuronInputSignalFormula" placeholder="Введите числовую формулу" class="tableInputData" type="text" value="${templateData.currentNeuronInputSignalFormula}"/>
-        </td>
-        <td>
-            <input id="currentNeuronInputSignalValue" placeholder="Введите число" class="tableInputData" type="number" value="${templateData.currentNeuronInputSignalValue}"/>
-        </td>
-        <td>
-            <input id="currentNeuronOutputSignalValue" placeholder="Введите число" class="tableInputData" type="number" value="${templateData.currentNeuronOutputSignalValue}"/>
-        </td>
-    </tr>`;
+    let currentNeuronInputSignalFormula = `<input id="currentNeuronInputSignalFormula" placeholder="Введите числовую формулу" class="tableInputData" type="text" value="${templateData.currentNeuronInputSignalFormula}"/>`;
+    let currentNeuronInputSignalValue = `<input id="currentNeuronInputSignalValue" placeholder="Введите число" class="tableInputData" type="number" value="${templateData.currentNeuronInputSignalValue}"/>`
+    let currentNeuronOutputSignalValue = `<input id="currentNeuronOutputSignalValue" placeholder="Введите число" class="tableInputData" type="number" value="${templateData.currentNeuronOutputSignalValue}"/>`
+
+    if(templateData.currentStep !== templateData.amountOfHiddenLayers * templateData.amountOfNodesInHiddenLayer + templateData.outputNeuronsAmount)
+    {
+        tableData += `<tr>
+            <td>
+                ${templateData.currentSelectedNodeId ? templateData.currentSelectedNodeId : ""}
+            </td>
+            <td>
+                ${templateData.currentNodeSection ? templateData.currentNodeSection : ""}
+            </td>
+            <td>            
+                ${currentNeuronInputSignalFormula}
+            </td>
+            <td>            
+                ${currentNeuronInputSignalValue}
+            </td>
+            <td>
+                ${currentNeuronOutputSignalValue}                
+            </td>
+        </tr>`;
+    }
 
     return `
         <div class="lab">
@@ -233,8 +249,8 @@ function getHTML(templateData) {
                     <td class="step-td">
                         <div class="steps">
                             <div class="steps-buttons">
-                                <input id="addStep" class="addStep btn btn-success" type="button" value="+"/>
-                                <input type="button" class="minusStep btn btn-danger" value="-">
+                                <input id="addStep" class="addStep btn btn-success" type="button" value="Следующий шаг"/>
+                                <input type="button" class="minusStep btn btn-danger" value="Предыдущий шаг">
                                 <button type="button" class="btn btn-info redrawGraph">
                                   Перерисовать граф
                                 </button>
@@ -242,6 +258,7 @@ function getHTML(templateData) {
                             <table class="steps-table">
                                 <tr>
                                     <th>№ нейрона</th>
+                                    <th>Источник сигнала</th>
                                     <th>Формула входного сигнала</th>
                                     <th>Значение входного сигнала</th>
                                     <th>Значение выходного сигнала</th>
@@ -343,38 +360,41 @@ function bindActionListeners(appInstance)
         appInstance.subscriber.emit('render', state);
     });
 
-    document.getElementById("currentNeuronOutputSignalValue").addEventListener('change', () => {
-        const state = appInstance.state.updateState((state) => {
-            return {
-                ...state,
-                currentNeuronOutputSignalValue: Number(document.getElementById("currentNeuronOutputSignalValue").value),
-            }
+    if(appInstance.state.getState().currentStep !== appInstance.state.getState().amountOfNodesInHiddenLayer * appInstance.state.getState().amountOfHiddenLayers + appInstance.state.getState().outputNeuronsAmount)
+    {
+        document.getElementById("currentNeuronOutputSignalValue").addEventListener('change', () => {
+            const state = appInstance.state.updateState((state) => {
+                return {
+                    ...state,
+                    currentNeuronOutputSignalValue: Number(document.getElementById("currentNeuronOutputSignalValue").value),
+                }
+            });
+
+            appInstance.subscriber.emit('render', state);
         });
 
-        appInstance.subscriber.emit('render', state);
-    });
+        document.getElementById("currentNeuronInputSignalFormula").addEventListener('change', () => {
+            const state = appInstance.state.updateState((state) => {
+                return {
+                    ...state,
+                    currentNeuronInputSignalFormula: document.getElementById("currentNeuronInputSignalFormula").value,
+                }
+            });
 
-    document.getElementById("currentNeuronInputSignalFormula").addEventListener('change', () => {
-        const state = appInstance.state.updateState((state) => {
-            return {
-                ...state,
-                currentNeuronInputSignalFormula: document.getElementById("currentNeuronInputSignalFormula").value,
-            }
+            appInstance.subscriber.emit('render', state);
         });
 
-        appInstance.subscriber.emit('render', state);
-    });
+        document.getElementById("currentNeuronInputSignalValue").addEventListener('change', () => {
+            const state = appInstance.state.updateState((state) => {
+                return {
+                    ...state,
+                    currentNeuronInputSignalValue: Number(document.getElementById("currentNeuronInputSignalValue").value),
+                }
+            });
 
-    document.getElementById("currentNeuronInputSignalValue").addEventListener('change', () => {
-        const state = appInstance.state.updateState((state) => {
-            return {
-                ...state,
-                currentNeuronInputSignalValue: Number(document.getElementById("currentNeuronInputSignalValue").value),
-            }
+            appInstance.subscriber.emit('render', state);
         });
-
-        appInstance.subscriber.emit('render', state);
-    });
+    }
 
     document.getElementById("addStep").addEventListener('click', () => {
         // обновляем стейт приложение
@@ -386,8 +406,8 @@ function bindActionListeners(appInstance)
 
             let prevSelectedNodeId = state.currentSelectedNodeId;
             let prevNeuronInputSignalFormula = state.currentNeuronInputSignalFormula ;
-            let prevNeuronInputSignalValue = state.currentNeuronInputSignalValue ;
-            let prevNeuronOutputSignalValue = state.currentNeuronOutputSignalValue;
+            let prevNeuronInputSignalValue = roundToTwoDecimals(state.currentNeuronInputSignalValue);
+            let prevNeuronOutputSignalValue = roundToTwoDecimals(state.currentNeuronOutputSignalValue);
             let prevNodeSection = state.currentNodeSection.slice();
 
             if(state.currentSelectedNodeId.length > 0 && state.currentNeuronInputSignalFormula.length > 0
@@ -399,8 +419,8 @@ function bindActionListeners(appInstance)
                 neuronsTableData.push({
                     nodeId: state.currentSelectedNodeId,
                     neuronInputSignalFormula: state.currentNeuronInputSignalFormula,
-                    neuronInputSignalValue: state.currentNeuronInputSignalValue,
-                    neuronOutputSignalValue: state.currentNeuronOutputSignalValue,
+                    neuronInputSignalValue: roundToTwoDecimals(state.currentNeuronInputSignalValue),
+                    neuronOutputSignalValue: roundToTwoDecimals(state.currentNeuronOutputSignalValue),
                     nodeSection: state.currentNodeSection,
                 });
             }
@@ -452,11 +472,18 @@ function bindActionListeners(appInstance)
 
     document.getElementsByClassName("minusStep")[0].addEventListener('click', () => {
         // обновляем стейт приложение
+        //todo при отмене больше чем одного шага граф не перерисовывается
         const state = appInstance.state.updateState((state) => {
             if(state.currentStep > 0)
             {
                 let neuronsTableData = state.neuronsTableData.slice();
-                let currentSelectedNodeIdNumber = Number(state.prevSelectedNodeId.match(/(\d+)/)[0]);
+                let currentSelectedNodeIdNumber = Number(neuronsTableData[neuronsTableData.length - 1].nodeId.match(/(\d+)/)[0]);
+                let currentNodeSection = neuronsTableData[neuronsTableData.length - 1].nodeSection;
+                let currentNeuronInputSignalFormula = neuronsTableData[neuronsTableData.length - 1].neuronInputSignalFormula;
+                let currentNeuronInputSignalValue = neuronsTableData[neuronsTableData.length - 1].neuronInputSignalValue;
+                let currentNeuronOutputSignalValue = neuronsTableData[neuronsTableData.length - 1].neuronOutputSignalValue;
+                let currentSelectedNodeId = neuronsTableData[neuronsTableData.length - 1].nodeId;
+
                 neuronsTableData.pop();
                 let nodesValueCopy = state.nodesValue.slice();
                 nodesValueCopy[currentSelectedNodeIdNumber] = null;
@@ -472,11 +499,11 @@ function bindActionListeners(appInstance)
                     prevNeuronInputSignalValue,
                     prevNeuronOutputSignalValue,
                     currentStep: state.currentStep - 1,
-                    currentSelectedNodeId: state.prevSelectedNodeId,
-                    currentNeuronInputSignalFormula: state.prevNeuronInputSignalFormula,
-                    currentNeuronInputSignalValue: state.prevNeuronInputSignalValue,
-                    currentNeuronOutputSignalValue: state.prevNeuronOutputSignalValue,
-                    currentNodeSection: state.prevNodeSection,
+                    currentSelectedNodeId,
+                    currentNeuronInputSignalFormula,
+                    currentNeuronInputSignalValue,
+                    currentNeuronOutputSignalValue,
+                    currentNodeSection,
                     isSelectingNodesModeActivated: false,
                     nodesValue: nodesValueCopy,
                 }

@@ -18,8 +18,7 @@ import javax.script.ScriptException;
 import java.math.BigDecimal;
 import java.util.*;
 
-import static vlab.server_java.Consts.doubleToTwoDecimal;
-import static vlab.server_java.Consts.outputNeuronsAmount;
+import static vlab.server_java.Consts.*;
 
 /**
  * Simple CheckProcessor implementation. Supposed to be changed as needed to provide
@@ -60,10 +59,13 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         comment += compareComment;
 
         points += comparePoints;
-        if(checkError == error)
+
+        if(checkError - meanSquaredErrorEpsilon <= error && checkError + meanSquaredErrorEpsilon >= error)
+        {
             points += Consts.errorPoints;
+        }
         else
-            comment += "Неверно посчитана ошибка. MSE = " + Double.toString(checkError);
+            comment += "Неверно посчитано MSE. MSE = " + Double.toString(checkError);
 
         return new CheckingSingleConditionResult(BigDecimal.valueOf(points), comment);
     }
@@ -306,7 +308,7 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         return new JSONArray(jsonArray);
     }
 
-    private JSONObject generateRightAnswer(JSONArray nodes, JSONArray edges, JSONArray nodesValue, JSONArray edgeWeight)
+    public JSONObject generateRightAnswer(JSONArray nodes, JSONArray edges, JSONArray nodesValue, JSONArray edgeWeight)
     {
         ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
         double error = 0;

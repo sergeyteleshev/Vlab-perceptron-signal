@@ -1,5 +1,6 @@
 package vlab.server_java.generate;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import rlcp.generate.GeneratingResult;
 import rlcp.server.processor.generate.GenerateProcessor;
@@ -100,6 +101,7 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         graph.put("amountOfNodesInHiddenLayer", amountOfNodesInHiddenLayer);
 
         code = graph.toString();
+
         text = "Найдите значение сигнала в каждом нейроне и посчитайте MSE";
 
         return new GeneratingResult(text, code, instructions);
