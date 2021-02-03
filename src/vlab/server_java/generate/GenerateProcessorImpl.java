@@ -102,7 +102,7 @@ public class GenerateProcessorImpl implements GenerateProcessor {
 
         code = graph.toString();
 
-        text = "Найдите значение сигнала в каждом нейроне и посчитайте MSE";
+        text = "Найдите значение сигнала в каждом нейроне и посчитайте MSE. Фунция активации - сигмоид.";
 
         return new GeneratingResult(text, code, instructions);
     }

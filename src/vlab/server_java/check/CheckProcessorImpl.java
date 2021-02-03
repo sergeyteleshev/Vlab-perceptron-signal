@@ -45,7 +45,8 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         JSONArray edgeWeight = jsonCode.getJSONArray("edgeWeight");
         JSONArray nodesValue = jsonCode.getJSONArray("nodesValue");
 
-        JSONArray serverAnswer = jsonObjectToJsonArray(generateRightAnswer(nodes, edges, nodesValue, edgeWeight));
+        JSONObject serverAnswerObject = generateRightAnswer(nodes, edges, nodesValue, edgeWeight);
+        JSONArray serverAnswer = jsonObjectToJsonArray(serverAnswerObject);
         JSONArray clientAnswer = jsonInstructions.getJSONArray("neuronsTableData");
 
         double checkError = countMSE(serverAnswer);
@@ -96,7 +97,7 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         for(int i = 0; i < arraySize; i++) {
             JSONObject currentJsonObject = new JSONObject();
 
-            for(int m = 0; m < keys.length - 1; m++)
+            for(int m = 0; m < keys.length; m++)
             {
                 currentJsonObject.put(keys[m], jsonObject.getJSONArray(keys[m]).get(i));
             }
@@ -116,13 +117,11 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
 
         JSONArray sortedServerAnswer = sortJsonArrays(serverAnswer.toString(), "nodeId");
         JSONArray sortedClientAnswer = sortJsonArrays(clientAnswer.toString(), "nodeId");
-        ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
 
         for(int i = 0; i < sortedClientAnswer.length(); i++)
         {
             boolean isNeuronInputSignalValueCorrect = false;
             boolean isNeuronOutputSignalValueCorrect = false;
-            boolean isNeuronInputSignalFormulaCorrect = false;
             boolean isNeuronNodeSectionCorrect = false;
 
             //равны входные значения сигнала на конкретный нейрон в рамках окрестности
@@ -152,26 +151,6 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
                 comment.append("Неверное значение выходного сигнала нейрона ").append(sortedClientAnswer.getJSONObject(i).getString("nodeId")).append(". ");
             }
 
-            //если рассчётные значения в поле инпута формулы равны
-            try {
-                double clientCountedFormula = new Double(engine.eval(sortedClientAnswer.getJSONObject(i).getString("neuronInputSignalFormula")).toString());
-                clientCountedFormula = (double) Math.round(clientCountedFormula * 100) / 100;
-                if(clientCountedFormula >= sortedServerAnswer.getJSONObject(i).getDouble("countedFormula") - countedFormulaEpsilon
-                    &&
-                    clientCountedFormula <= sortedServerAnswer.getJSONObject(i).getDouble("countedFormula") + countedFormulaEpsilon
-                )
-                {
-                    isNeuronInputSignalFormulaCorrect = true;
-                }
-                else
-                {
-                    comment.append(" Неверная формула входного сигнала нейрона ").append(sortedClientAnswer.getJSONObject(i).getString("nodeId")).append(". ");
-                }
-            } catch (ScriptException e) {
-                comment.append(" Некорректная формула расчёта входного сигнала нейрона ").append(sortedClientAnswer.getJSONObject(i).getString("nodeId")).append(". ");;
-                continue;
-            }
-
             //если правильно в графе выделил нейроны, из которых сигнал течёт в текущий нейрон по таблице
             if(compareArrays(sortedClientAnswer.getJSONObject(i).getJSONArray("nodeSection"), sortedServerAnswer.getJSONObject(i).getJSONArray("nodeSection")))
             {
@@ -182,17 +161,14 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
                 comment.append("Неверно выделены нейроны из которых течёт сигнал в нейрон ").append(sortedClientAnswer.getJSONObject(i).getString("nodeId")).append(". ");
             }
 
-            if(isNeuronInputSignalFormulaCorrect)
-                points += pointDelta / 4;
-
             if(isNeuronInputSignalValueCorrect)
-                points += pointDelta / 4;
+                points += pointDelta / 3;
 
             if(isNeuronOutputSignalValueCorrect)
-                points += pointDelta / 4;
+                points += pointDelta / 3;
 
             if(isNeuronNodeSectionCorrect)
-                points += pointDelta / 4;
+                points += pointDelta / 3;
         }
 
         int rowsDiff = serverAnswer.length() - clientAnswer.length();
@@ -320,15 +296,10 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
 
     public JSONObject generateRightAnswer(JSONArray nodes, JSONArray edges, JSONArray nodesValue, JSONArray edgeWeight)
     {
-        ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
-        double error = 0;
-
         JSONArray jsonNeuronInputSignalValue = new JSONArray();
         JSONArray jsonNeuronOutputSignalValue = new JSONArray();
         JSONArray jsonNodeId = new JSONArray();
-        JSONArray jsonNeuronInputSignalFormula = new JSONArray();
         JSONArray jsonNodeSection = new JSONArray();
-        JSONArray jsonCountedFormula = new JSONArray();
         JSONObject serverAnswer = new JSONObject();
 
         //нашли значение всех выходных сигналов нейронов
@@ -365,20 +336,7 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
 
             jsonNeuronOutputSignalValue.put(i, currentNodeValue);
             jsonNodeId.put(i, nodeId);
-            jsonNeuronInputSignalFormula.put(i, nodeFormula.toString());
             jsonNodeSection.put(i, nodeSection);
-
-            Object countedFormula = null;
-
-            try {
-                countedFormula = engine.eval(nodeFormula.toString());
-                countedFormula = doubleToTwoDecimal(new Double(countedFormula.toString()));
-
-            } catch (ScriptException e) {
-                e.printStackTrace();
-            }
-
-            jsonCountedFormula.put(i, countedFormula);
         }
 
         //избавляемся от ненужных null для входных нейронов, которые уже изначально даны по условию, чтобы у нас был одинаково похожий объект с clientData
@@ -387,17 +345,13 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
             jsonNeuronInputSignalValue.remove(0);
             jsonNeuronOutputSignalValue.remove(0);
             jsonNodeId.remove(0);
-            jsonNeuronInputSignalFormula.remove(0);
             jsonNodeSection.remove(0);
-            jsonCountedFormula.remove(0);
         }
 
         serverAnswer.put("neuronInputSignalValue", jsonNeuronInputSignalValue);
         serverAnswer.put("neuronOutputSignalValue", jsonNeuronOutputSignalValue);
         serverAnswer.put("nodeId", jsonNodeId);
-        serverAnswer.put("neuronInputSignalFormula", jsonNeuronInputSignalFormula);
         serverAnswer.put("nodeSection", jsonNodeSection);
-        serverAnswer.put("countedFormula", jsonCountedFormula);
 
         return serverAnswer;
     }

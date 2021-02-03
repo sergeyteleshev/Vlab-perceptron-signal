@@ -91,13 +91,13 @@ function dataToSigma(state) {
 
         if(currentSelectedNodeId === nodeId)
         {
-            nodeColor = "#00F";
+            nodeColor = "#DE4E5A";
         }
 
         currentNodeSection.map(currentNodeSectionId => {
            if(currentNodeSectionId === nodeId)
            {
-               nodeColor = "#FF0";
+               nodeColor = "#DEBF59";
            }
         });
 
@@ -150,10 +150,9 @@ function getHTML(templateData) {
             <td>
                 ${templateData.neuronsTableData[i].nodeId}
             </td>
-            <td>${templateData.neuronsTableData[i].nodeSection.toString()}</td>
             <td>
-                ${templateData.neuronsTableData[i].neuronInputSignalFormula}
-            </td>
+                ${templateData.neuronsTableData[i].nodeSection.toString()}
+            </td>            
             <td>
                 ${templateData.neuronsTableData[i].neuronInputSignalValue}            
             </td>
@@ -163,7 +162,6 @@ function getHTML(templateData) {
         </tr>`;
     }
 
-    let currentNeuronInputSignalFormula = `<input id="currentNeuronInputSignalFormula" placeholder="Введите числовую формулу" class="tableInputData" type="text" value="${templateData.currentNeuronInputSignalFormula}"/>`;
     let currentNeuronInputSignalValue = `<input id="currentNeuronInputSignalValue" placeholder="Введите число" class="tableInputData" type="number" value="${templateData.currentNeuronInputSignalValue}"/>`
     let currentNeuronOutputSignalValue = `<input id="currentNeuronOutputSignalValue" placeholder="Введите число" class="tableInputData" type="number" value="${templateData.currentNeuronOutputSignalValue}"/>`
 
@@ -175,10 +173,7 @@ function getHTML(templateData) {
             </td>
             <td>
                 ${templateData.currentNodeSection ? templateData.currentNodeSection : ""}
-            </td>
-            <td>            
-                ${currentNeuronInputSignalFormula}
-            </td>
+            </td>          
             <td>            
                 ${currentNeuronInputSignalValue}
             </td>
@@ -190,87 +185,60 @@ function getHTML(templateData) {
 
     return `
         <div class="lab">
-            <table class="lab-table">
-                <tr>
-                    <td colspan="2">
-                        <div class="lab-header">
-                            <div></div>
-                            <span>Ток сигнала в перцептроне Розенблатта</span>
-                            <!-- Button trigger modal -->
-                            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#exampleModalScrollable">
-                              Справка
+            <div class="lab-table">                                                                         
+                <div class="lab-header_text">Ток сигнала в перцептроне Розенблатта</div>             
+                <div class="header-buttons">
+                    <button type="button" class="btn btn-info redrawGraph">Перерисовать граф</button>
+                    <button type="button" class="btn btn-info showReference" data-toggle="modal" data-target="#exampleModalScrollable">Справка</button>
+                </div>                
+                <div class="graphComponent">                                              
+                    <div id="graphContainer"></div>
+                </div>                    
+                <div class="steps">
+                    <div class="steps-buttons">
+                        <input id="addStep" class="addStep btn btn-success" type="button" value="Следующий шаг"/>
+                        <input type="button" class="minusStep btn btn-danger" value="Предыдущий шаг">                                
+                    </div>  
+                    <table class="steps-table">
+                        <tr>
+                            <th>№ нейрона</th>
+                            <th>Источники сигнала</th>                                   
+                            <th>Значение входного сигнала</th>
+                            <th>Значение выходного сигнала</th>
+                        </tr>                        
+                        ${tableData}                                        
+                    </table>                             
+                    <div class="maxFlow">
+                        <span>MSE:</span>
+                        <input type='number' ${countInvalidNodesValue !== 0 ? "disabled" : ""} class='maxFlow-input' id="error" value="${templateData.error}"'/>                       
+                    </div>                                                                                                                                            
+                </div>                    
+            </div> 
+            <div class="lab-header">                                       
+                    <!-- Button trigger modal -->
+                                       
+                    <!-- Modal -->
+                    <div class="modal fade" id="exampleModalScrollable" tabindex="-1" role="dialog" aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-scrollable" role="document">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalScrollableTitle">Справка по интерфейсу лабораторной работы</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
                             </button>
-                            
-                            <!-- Modal -->
-                            <div class="modal fade" id="exampleModalScrollable" tabindex="-1" role="dialog" aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
-                              <div class="modal-dialog modal-dialog-scrollable" role="document">
-                                <div class="modal-content">
-                                  <div class="modal-header">
-                                    <h5 class="modal-title" id="exampleModalScrollableTitle">Справка по интерфейсу лабораторной работы</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                      <span aria-hidden="true">&times;</span>
-                                    </button>
-                                  </div>
-                                  <div class="modal-body">
-                                        <p><b>Алгоритм работы с интерфейсом:</b></p>
-                                        <p>
-                                            1) Для того, чтобы начать строить путь из истока к стоку, нужно кликнуть на исток. Путь может начинаться только из него.                                            
-                                            Далее нужно включить в текущий путь только те вершины, в которые есть ребро с <u>не</u> нулевым весом. Если вес <u>равен</u> нулю(в любую из сторон), то 
-                                            лабораторная работа не позволит вам выделить эту вершину.
-                                        </p>
-                                        <p>
-                                            2) После того как путь построен нужно в текстовом поле "минимальный поток текущей итерации" ввести то, что требуется и нажать на "+". Тем самым вы перейдёте на следующую итерацию алгоритма.
-                                        </p>
-                                        <p>
-                                            3) Повторять шаги 2 и 3 до тех пор пока существует путь из истока к стоку.
-                                        </p>
-                                        <p>
-                                            4) После того как путей больше нет, необходимо нажать на кнопку "завершить". Тем самым разблокируется текстовое поле "Максимальный поток графа", и можно будет ввести полученный ответ.                                        
-                                        </p>
-                                        <p>
-                                            5) Чтобы завершить лабораторную работу, нужно нажать кнопку "отправить".
-                                        </p>
-                                        <p><b>Примечание:</b></p>
-                                        <p>1) После ввода значений в текстовые поля кнопки не кликаются с первого раза, так как фокус остаётся на текстовом поле. Первым кликом(в любое место окна ЛР) нужно убрать фокус, а затем нажать на нужную кнопку</p>
-                                        <p>2) После нажатия кнопки "завершить" весь остальной интерфейс остаётся кликабельным, так что стоит быть аккуратнее, чтобы не "сбить" результат работы.</p>
-                                  </div>                                 
-                                </div>
-                              </div>
-                            </div>                           
+                          </div>
+                          <div class="modal-body">                                                                             
+                                <p>1) Если граф отобразился так, что не видно значение рёбер или вершин графа, то нужно нажать <b>кнопку "перерисовать граф"</b>.</p>
+                                <p>2) При клике на чёрный нейрон, он становится красным и в таблице появляется <b>значение нейрона для текущей итерации</b>.</p>
+                                <p>3) Для того, чтобы выбрать <b>источники сигнала текущей итерации</b>, нужно кликнуть на все нейроны, из которых идёт сигнал в текущий (красный) нейрон.</p>
+                                <p>4) После того как все данные таблицы для текущей итерации заполнены, нужно нажать <b>кнопку "следующий шаг"</b>. Введённые числовые <b>значения автоматически округлятся до 2х знаков</b>.</p>
+                                <p>5) Если вы совершили ошибку, то вы можете отменить текущую итерацию нажав кнопку <b>"Предыдущий шаг"</b>.</p>
+                                <p>6) <b>Поле MSE</b> откроется сразу после того как будет рассчитан сигнал во всех нейронах.</p>
+                          </div>                                 
                         </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="graphComponent">     
-                            <button type="button" class="btn btn-info redrawGraph">Перерисовать граф</button>                     
-                            <div id="container"></div>
-                        </div>
-                    </td>
-                    <td class="step-td">
-                        <div class="steps">
-                            <div class="steps-buttons">
-                                <input id="addStep" class="addStep btn btn-success" type="button" value="Следующий шаг"/>
-                                <input type="button" class="minusStep btn btn-danger" value="Предыдущий шаг">                                
-                            </div>  
-                            <table class="steps-table">
-                                <tr>
-                                    <th>№ нейрона</th>
-                                    <th>Источники сигнала</th>
-                                    <th>Формула входного сигнала</th>
-                                    <th>Значение входного сигнала</th>
-                                    <th>Значение выходного сигнала</th>
-                                </tr>                        
-                                ${tableData}                                        
-                            </table>                             
-                            <div class="maxFlow">
-                                <span>MSE:</span>
-                                <input type='number' ${countInvalidNodesValue !== 0 ? "disabled" : ""} class='maxFlow-input' id="error" value="${templateData.error}"'/>                       
-                            </div>                                                                                                                                            
-                        </div>
-                    </td>
-                </tr>
-            </table>                                                                         
+                      </div>
+                    </div>                           
+                </div>                                                                      
         </div>`;
 }
 
@@ -284,11 +252,9 @@ function initState() {
         neuronsTableData: [],
         currentSelectedNodeId: "",
         prevSelectedNodeId: "",
-        prevNeuronInputSignalFormula: "",
         prevNeuronInputSignalValue: "",
         prevNeuronOutputSignalValue: "",
         prevNodeSection: [],
-        currentNeuronInputSignalFormula: "",
         currentNeuronInputSignalValue: "",
         currentNeuronOutputSignalValue: "",
         error: 0,
@@ -371,17 +337,6 @@ function bindActionListeners(appInstance)
             appInstance.subscriber.emit('render', state);
         });
 
-        document.getElementById("currentNeuronInputSignalFormula").addEventListener('change', () => {
-            const state = appInstance.state.updateState((state) => {
-                return {
-                    ...state,
-                    currentNeuronInputSignalFormula: document.getElementById("currentNeuronInputSignalFormula").value,
-                }
-            });
-
-            appInstance.subscriber.emit('render', state);
-        });
-
         document.getElementById("currentNeuronInputSignalValue").addEventListener('change', () => {
             const state = appInstance.state.updateState((state) => {
                 return {
@@ -403,20 +358,17 @@ function bindActionListeners(appInstance)
             let currentSelectedNodeIdNumber = state.currentSelectedNodeId.match(/(\d+)/)[0];
 
             let prevSelectedNodeId = state.currentSelectedNodeId;
-            let prevNeuronInputSignalFormula = state.currentNeuronInputSignalFormula ;
             let prevNeuronInputSignalValue = roundToTwoDecimals(state.currentNeuronInputSignalValue);
             let prevNeuronOutputSignalValue = roundToTwoDecimals(state.currentNeuronOutputSignalValue);
             let prevNodeSection = state.currentNodeSection.slice();
 
-            if(state.currentSelectedNodeId.length > 0 && state.currentNeuronInputSignalFormula.length > 0
-                && !isNaN(state.currentNeuronInputSignalValue) && !isNaN(state.currentNeuronOutputSignalValue)
+            if(state.currentSelectedNodeId.length > 0 && !isNaN(state.currentNeuronInputSignalValue) && !isNaN(state.currentNeuronOutputSignalValue)
                 && state.currentNodeSection.length > 0)
             {
                 nodesValue[currentSelectedNodeIdNumber] = roundToTwoDecimals(state.currentNeuronOutputSignalValue);
                 currentStep++;
                 neuronsTableData.push({
                     nodeId: state.currentSelectedNodeId,
-                    neuronInputSignalFormula: state.currentNeuronInputSignalFormula,
                     neuronInputSignalValue: roundToTwoDecimals(state.currentNeuronInputSignalValue),
                     neuronOutputSignalValue: roundToTwoDecimals(state.currentNeuronOutputSignalValue),
                     nodeSection: state.currentNodeSection,
@@ -435,12 +387,10 @@ function bindActionListeners(appInstance)
                 neuronsTableData,
                 nodesValue,
                 prevSelectedNodeId,
-                prevNeuronInputSignalFormula,
                 prevNeuronInputSignalValue,
                 prevNeuronOutputSignalValue,
                 prevNodeSection,
                 currentSelectedNodeId: "",
-                currentNeuronInputSignalFormula: "",
                 currentNeuronInputSignalValue: "",
                 currentNeuronOutputSignalValue: "",
                 currentNodeSection: [],
@@ -476,7 +426,6 @@ function bindActionListeners(appInstance)
                 let neuronsTableData = state.neuronsTableData.slice();
                 let currentSelectedNodeIdNumber = Number(neuronsTableData[neuronsTableData.length - 1].nodeId.match(/(\d+)/)[0]);
                 let currentNodeSection = neuronsTableData[neuronsTableData.length - 1].nodeSection;
-                let currentNeuronInputSignalFormula = neuronsTableData[neuronsTableData.length - 1].neuronInputSignalFormula;
                 let currentNeuronInputSignalValue = neuronsTableData[neuronsTableData.length - 1].neuronInputSignalValue;
                 let currentNeuronOutputSignalValue = neuronsTableData[neuronsTableData.length - 1].neuronOutputSignalValue;
                 let currentSelectedNodeId = neuronsTableData[neuronsTableData.length - 1].nodeId;
@@ -484,7 +433,6 @@ function bindActionListeners(appInstance)
                 neuronsTableData.pop();
                 let nodesValueCopy = state.nodesValue.slice();
                 nodesValueCopy[currentSelectedNodeIdNumber] = null;
-                let prevNeuronInputSignalFormula = state.currentNeuronInputSignalFormula;
                 let prevNeuronInputSignalValue = state.currentNeuronInputSignalValue;
                 let prevNeuronOutputSignalValue = state.currentNeuronOutputSignalValue;
                 let prevNodeSection = state.currentNodeSection;
@@ -492,12 +440,10 @@ function bindActionListeners(appInstance)
                 return  {
                     ...state,
                     neuronsTableData,
-                    prevNeuronInputSignalFormula,
                     prevNeuronInputSignalValue,
                     prevNeuronOutputSignalValue,
                     currentStep: state.currentStep - 1,
                     currentSelectedNodeId,
-                    currentNeuronInputSignalFormula,
                     currentNeuronInputSignalValue,
                     currentNeuronOutputSignalValue,
                     currentNodeSection,
@@ -519,7 +465,7 @@ function bindActionListeners(appInstance)
 function renderDag(state, appInstance) {
     let s = new sigma({
         renderers: [{
-            container: document.getElementById('container'),
+            container: document.getElementById('graphContainer'),
             type: "canvas",
         }],
         settings: {
