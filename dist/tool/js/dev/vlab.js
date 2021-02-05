@@ -185,32 +185,7 @@ function getHTML(templateData) {
 
     return `
         <div class="lab">
-            <div class="lab-table">                                                    
-                <div class="lab-header">                                       
-                    <!-- Button trigger modal -->
-                                       
-                    <!-- Modal -->
-                    <div class="modal fade" id="exampleModalScrollable" tabindex="-1" role="dialog" aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
-                      <div class="modal-dialog modal-dialog-scrollable" role="document">
-                        <div class="modal-content">
-                          <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalScrollableTitle">Справка по интерфейсу лабораторной работы</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                              <span aria-hidden="true">&times;</span>
-                            </button>
-                          </div>
-                          <div class="modal-body">                                                                             
-                                <p>1) Если граф отобразился так, что не видно значение рёбер или вершин графа, то нужно нажать <b>кнопку "перерисовать граф"</b>.</p>
-                                <p>2) При клике на чёрный нейрон, он становится красным и в таблице появляется <b>значение нейрона для текущей итерации</b>.</p>
-                                <p>3) Для того, чтобы выбрать <b>источники сигнала текущей итерации</b>, нужно кликнуть на все нейроны, из которых идёт сигнал в текущий (красный) нейрон.</p>
-                                <p>4) После того как все данные таблицы для текущей итерации заполнены, нужно нажать <b>кнопку "следующий шаг"</b>. Введённые числовые <b>значения автоматически округлятся до 2х знаков</b>.</p>
-                                <p>5) Если вы совершили ошибку, то вы можете отменить текущую итерацию нажав кнопку <b>"Предыдущий шаг"</b>.</p>
-                                <p>6) <b>Поле MSE</b> откроется сразу после того как будет рассчитан сигнал во всех нейронах.</p>
-                          </div>                                 
-                        </div>
-                      </div>
-                    </div>                           
-                </div>     
+            <div class="lab-table">                                                                         
                 <div class="lab-header_text">Ток сигнала в перцептроне Розенблатта</div>             
                 <div class="header-buttons">
                     <button type="button" class="btn btn-info redrawGraph">Перерисовать граф</button>
@@ -238,7 +213,32 @@ function getHTML(templateData) {
                         <input type='number' ${countInvalidNodesValue !== 0 ? "disabled" : ""} class='maxFlow-input' id="error" value="${templateData.error}"'/>                       
                     </div>                                                                                                                                            
                 </div>                    
-            </div>                                                                       
+            </div> 
+            <div class="lab-header">                                       
+                    <!-- Button trigger modal -->
+                                       
+                    <!-- Modal -->
+                    <div class="modal fade" id="exampleModalScrollable" tabindex="-1" role="dialog" aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-scrollable" role="document">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalScrollableTitle">Справка по интерфейсу лабораторной работы</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                          </div>
+                          <div class="modal-body">                                                                             
+                                <p>1) Если граф отобразился так, что не видно значение рёбер или вершин графа, то нужно нажать <b>кнопку "перерисовать граф"</b>.</p>
+                                <p>2) При клике на чёрный нейрон, он становится красным и в таблице появляется <b>значение нейрона для текущей итерации</b>.</p>
+                                <p>3) Для того, чтобы выбрать <b>источники сигнала текущей итерации</b>, нужно кликнуть на все нейроны, из которых идёт сигнал в текущий (красный) нейрон.</p>
+                                <p>4) После того как все данные таблицы для текущей итерации заполнены, нужно нажать <b>кнопку "следующий шаг"</b>. Введённые числовые <b>значения автоматически округлятся до 2х знаков</b>.</p>
+                                <p>5) Если вы совершили ошибку, то вы можете отменить текущую итерацию нажав кнопку <b>"Предыдущий шаг"</b>.</p>
+                                <p>6) <b>Поле MSE</b> откроется сразу после того как будет рассчитан сигнал во всех нейронах.</p>
+                          </div>                                 
+                        </div>
+                      </div>
+                    </div>                           
+                </div>                                                                      
         </div>`;
 }
 
@@ -610,7 +610,7 @@ function init_lab() {
         getCondition: function () {
         },
         getResults: function () {
-            return appInstance.state.getState();
+            return JSON.stringify(appInstance.state.getState());
         },
         calculateHandler: function (text, code) {
         },
