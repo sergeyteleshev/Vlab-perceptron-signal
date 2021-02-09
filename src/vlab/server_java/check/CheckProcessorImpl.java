@@ -33,42 +33,49 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
         double points = 0;
         String comment = "";
 
-        String code = generatingResult.getCode();
-
-        JSONObject jsonCode = new JSONObject(code);
-        JSONObject jsonInstructions = new JSONObject(instructions);
-
-        JSONArray nodes = jsonCode.getJSONArray("nodes");
-        JSONArray edges = jsonCode.getJSONArray("edges");
-
-        double error = jsonInstructions.getDouble("error");
-        JSONArray edgeWeight = jsonCode.getJSONArray("edgeWeight");
-        JSONArray nodesValue = jsonCode.getJSONArray("nodesValue");
-
-        JSONObject serverAnswerObject = generateRightAnswer(nodes, edges, nodesValue, edgeWeight);
-        JSONArray serverAnswer = jsonObjectToJsonArray(serverAnswerObject);
-        JSONArray clientAnswer = jsonInstructions.getJSONArray("neuronsTableData");
-
-        double checkError = countMSE(serverAnswer);
-        checkError = (double) Math.round(checkError * 100) / 100;
-
-        JSONObject compareResult = compareAnswers(serverAnswer, clientAnswer, Consts.tablePoints);
-
-        double comparePoints = compareResult.getDouble("points");
-
-        String compareComment = compareResult.getString("comment");
-        comment += compareComment;
-
-        points += comparePoints;
-
-        if(checkError - meanSquaredErrorEpsilon <= error && checkError + meanSquaredErrorEpsilon >= error)
+        try
         {
-            points += Consts.errorPoints;
-        }
-        else
-            comment += "Неверно посчитано MSE. MSE = " + Double.toString(checkError);
+            String code = generatingResult.getCode();
 
-        points = doubleToTwoDecimal(points);
+            JSONObject jsonCode = new JSONObject(code);
+            JSONObject jsonInstructions = new JSONObject(instructions);
+
+            JSONArray nodes = jsonCode.getJSONArray("nodes");
+            JSONArray edges = jsonCode.getJSONArray("edges");
+
+            double error = jsonInstructions.getDouble("error");
+            JSONArray edgeWeight = jsonCode.getJSONArray("edgeWeight");
+            JSONArray nodesValue = jsonCode.getJSONArray("nodesValue");
+
+            JSONObject serverAnswerObject = generateRightAnswer(nodes, edges, nodesValue, edgeWeight);
+            JSONArray serverAnswer = jsonObjectToJsonArray(serverAnswerObject);
+            JSONArray clientAnswer = jsonInstructions.getJSONArray("neuronsTableData");
+
+            double checkError = doubleToTwoDecimal(countMSE(serverAnswer));
+
+            JSONObject compareResult = compareAnswers(serverAnswer, clientAnswer, Consts.tablePoints);
+
+            double comparePoints = compareResult.getDouble("points");
+
+            String compareComment = compareResult.getString("comment");
+            comment += compareComment;
+
+            points += comparePoints;
+
+            if(checkError - meanSquaredErrorEpsilon <= error && checkError + meanSquaredErrorEpsilon >= error)
+            {
+                points += Consts.errorPoints;
+            }
+            else
+                comment += "Неверно посчитано MSE. MSE = " + checkError;
+
+            points = doubleToTwoDecimal(points);
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
 
         return new CheckingSingleConditionResult(BigDecimal.valueOf(points), comment);
     }
