@@ -146,12 +146,14 @@ function getHTML(templateData) {
 
     for(let i = 0; i < templateData.neuronsTableData.length; i++)
     {
+        let currentNodeSection = [templateData.neuronsTableData[i].nodeSection].toString().replaceAll("n", "");
+
         tableData += `<tr>
             <td>
-                ${templateData.neuronsTableData[i].nodeId}
+                ${templateData.neuronsTableData[i].nodeId.substring(1)}
             </td>
             <td>
-                ${templateData.neuronsTableData[i].nodeSection.toString()}
+                ${currentNodeSection}
             </td>            
             <td>
                 ${templateData.neuronsTableData[i].neuronInputSignalValue}            
@@ -167,12 +169,18 @@ function getHTML(templateData) {
 
     if(templateData.currentStep !== templateData.amountOfHiddenLayers * templateData.amountOfNodesInHiddenLayer + templateData.outputNeuronsAmount)
     {
+        let currentNodeSection = [...templateData.currentNodeSection];
+        for(let i = 0; i < currentNodeSection.length; i++)
+        {
+            currentNodeSection[i] = currentNodeSection[i].substring(1);
+        }
+
         tableData += `<tr>
             <td>
-                ${templateData.currentSelectedNodeId ? templateData.currentSelectedNodeId : ""}
+                ${templateData.currentSelectedNodeId ? templateData.currentSelectedNodeId.substring(1) : ""}
             </td>
             <td>
-                ${templateData.currentNodeSection ? templateData.currentNodeSection : ""}
+                ${templateData.currentNodeSection ? currentNodeSection : ""}
             </td>          
             <td>            
                 ${currentNeuronInputSignalValue}
@@ -196,8 +204,8 @@ function getHTML(templateData) {
                 </div>                    
                 <div class="steps">
                     <div class="steps-buttons">
-                        <input id="addStep" class="addStep btn btn-success" type="button" value="Следующий шаг"/>
-                        <input type="button" class="minusStep btn btn-danger" value="Предыдущий шаг">                                
+                        <input id="addStep" class="addStep btn btn-success" type="button" value="+"/>
+                        <input type="button" class="minusStep btn btn-danger" value="-">                                
                     </div>  
                     <table class="steps-table">
                         <tr>
