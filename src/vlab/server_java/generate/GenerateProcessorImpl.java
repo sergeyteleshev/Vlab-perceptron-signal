@@ -43,6 +43,9 @@ public class GenerateProcessorImpl implements GenerateProcessor {
             Object[] nodesValue = new Object[nodesAmount];
             float[][] edgeWeight = new float[nodesAmount][nodesAmount];
             int[] nodesLevel = new int[nodesAmount];
+            final String[] activationFunctions = Consts.activationFunctions;
+            int currentActivationFunctionIndex = generateRandomIntRange(0, activationFunctions.length - 1);
+            String currentActivationFunction = activationFunctions[currentActivationFunctionIndex];
 
             //начальные значения для рецепторов
             for(int i = 0; i < inputNeuronsAmount; i++)
@@ -109,6 +112,10 @@ public class GenerateProcessorImpl implements GenerateProcessor {
             graph.put("outputNeuronsAmount", outputNeuronsAmount);
             graph.put("amountOfHiddenLayers", amountOfHiddenLayers);
             graph.put("amountOfNodesInHiddenLayer", amountOfNodesInHiddenLayer);
+            graph.put("inputNeuronsValues", inputNeuronsValues);
+            graph.put("currentActivationFunction", currentActivationFunction);
+
+            text.append("Фунция активации – ").append(currentActivationFunction).append(".");
 
             code = graph.toString();
         }
@@ -116,8 +123,6 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         {
             e.printStackTrace();
         }
-
-        text.append("Фунция активации - сигмоид.");
 
         return new GeneratingResult(text.toString(), code, instructions);
     }

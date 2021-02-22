@@ -17,7 +17,7 @@ public class Consts {
     public static final double tablePoints = 0.9;
     public static final double neuronOutputSignalValueEpsilon = 0.05;
     public static final double neuronInputSignalValueEpsilon = 0.05;
-    public static final double countedFormulaEpsilon = 0.05;
+    public static final String[] activationFunctions = {"сигмовидная", "линейная", "гиперболический тангенс"};
     public static final double meanSquaredErrorEpsilon = 0.05;
 
     public static double doubleToTwoDecimal(double number)
@@ -27,7 +27,7 @@ public class Consts {
 
     public static int generateRandomIntRange(int min, int max)
     {
-        return ThreadLocalRandom.current().nextInt(min, max);
+        return ThreadLocalRandom.current().nextInt(min, max + 1);
     }
 
     public static double generateRandomDoubleRange(double min, double max)

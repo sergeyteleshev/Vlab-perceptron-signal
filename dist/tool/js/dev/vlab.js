@@ -236,12 +236,7 @@ function getHTML(templateData) {
                             </button>
                           </div>
                           <div class="modal-body">                                                                             
-                                <p>1) Если граф отобразился так, что не видно значение рёбер или вершин графа, то нужно нажать <b>кнопку "перерисовать граф"</b>.</p>
-                                <p>2) При клике на чёрный нейрон, он становится красным и в таблице появляется <b>значение нейрона для текущей итерации</b>.</p>
-                                <p>3) Для того, чтобы выбрать <b>источники сигнала текущей итерации</b>, нужно кликнуть на все нейроны, из которых идёт сигнал в текущий (красный) нейрон.</p>
-                                <p>4) После того как все данные таблицы для текущей итерации заполнены, нужно нажать <b>кнопку "следующий шаг"</b>. Введённые числовые <b>значения автоматически округлятся до 2х знаков</b>.</p>
-                                <p>5) Если вы совершили ошибку, то вы можете отменить текущую итерацию нажав кнопку <b>"Предыдущий шаг"</b>.</p>
-                                <p>6) <b>Поле MSE</b> откроется сразу после того как будет рассчитан сигнал во всех нейронах.</p>
+                                <p>Если нейронная сеть на рисунке отображена плохо, то воспользуйтесь кнопкой «Перерисовать» до тех пор, пока рисунок и нанесенные числовые значения будут хорошо видны. У нейронов входного слоя в скобках указаны их входные сигналы. Для заполнения очередной строки таблицы щелкните по выбранной вершине графа. Вершина поменяет цвет на красный и будет занесена в таблицу. Если у нейрона есть прообразы, то щелкните по каждой такой вершине на рисунке: нейроны прообразов будут занесены в таблицу. Определите входной и выходной сигнал нейрона, внесите в таблицу их значения после округления до второго знака после запятой. Для перехода к следующей строке таблицы нажмите кнопку «+». Если очередная строка заполнена неверно, то используйте кнопку «-», а после этого создайте эту строку в таблице с помощью кнопки «+» и заполните ее еще раз. После этого нейрон на рисунке поменяет цвет на зеленый. Завершить формирование таблицы, когда на рисунке все нейроны будут раскрашены зеленым цветом. Рассчитайте и введите значение оценки полученного решения MSE после округления до второго знака после запятой. После этого нажмите кнопку в правом нижнем углу стенда «Ответ готов».</p>                                
                           </div>                                 
                         </div>
                       </div>
@@ -272,6 +267,7 @@ function initState() {
         outputNeuronsAmount: 0,
         amountOfHiddenLayers: 0,
         amountOfNodesInHiddenLayer: 0,
+        activationFunctions: ["сигмовидная", "линейная", "гиперболический тангенс"],
     };
 
     return {
@@ -366,19 +362,19 @@ function bindActionListeners(appInstance)
             let currentSelectedNodeIdNumber = state.currentSelectedNodeId.match(/(\d+)/)[0];
 
             let prevSelectedNodeId = state.currentSelectedNodeId;
-            let prevNeuronInputSignalValue = roundToTwoDecimals(state.currentNeuronInputSignalValue);
-            let prevNeuronOutputSignalValue = roundToTwoDecimals(state.currentNeuronOutputSignalValue);
+            let prevNeuronInputSignalValue = state.currentNeuronInputSignalValue;
+            let prevNeuronOutputSignalValue = state.currentNeuronOutputSignalValue;
             let prevNodeSection = state.currentNodeSection.slice();
 
             if(state.currentSelectedNodeId.length > 0 && !isNaN(state.currentNeuronInputSignalValue) && !isNaN(state.currentNeuronOutputSignalValue)
                 && state.currentNodeSection.length > 0)
             {
-                nodesValue[currentSelectedNodeIdNumber] = roundToTwoDecimals(state.currentNeuronOutputSignalValue);
+                nodesValue[currentSelectedNodeIdNumber] = state.currentNeuronOutputSignalValue;
                 currentStep++;
                 neuronsTableData.push({
                     nodeId: state.currentSelectedNodeId,
-                    neuronInputSignalValue: roundToTwoDecimals(state.currentNeuronInputSignalValue),
-                    neuronOutputSignalValue: roundToTwoDecimals(state.currentNeuronOutputSignalValue),
+                    neuronInputSignalValue: state.currentNeuronInputSignalValue,
+                    neuronOutputSignalValue: state.currentNeuronOutputSignalValue,
                     nodeSection: state.currentNodeSection,
                 });
             }
