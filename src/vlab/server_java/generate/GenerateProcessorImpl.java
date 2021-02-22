@@ -6,6 +6,9 @@ import rlcp.generate.GeneratingResult;
 import rlcp.server.processor.generate.GenerateProcessor;
 import vlab.server_java.Consts;
 
+import static vlab.server_java.Consts.*;
+import static vlab.server_java.Consts.inputNeuronsAmount;
+
 /**
  * Simple GenerateProcessor implementation. Supposed to be changed as needed to
  * provide necessary Generate method support.
@@ -14,12 +17,14 @@ public class GenerateProcessorImpl implements GenerateProcessor {
     @Override
     public GeneratingResult generate(String condition) {
         //do Generate logic here
-        String text = "";
+        StringBuilder text = new StringBuilder();
         String code = "";
         String instructions = "";
         try
         {
             JSONObject graph = new JSONObject();
+
+            double[] inputNeuronsValues = new double[inputNeuronsAmount];
 
             int minInputNeuronValue = Consts.minInputNeuronValue;
             int maxInputNeuronValue = Consts.maxInputNeuronValue;
@@ -43,8 +48,6 @@ public class GenerateProcessorImpl implements GenerateProcessor {
             for(int i = 0; i < inputNeuronsAmount; i++)
             {
                 nodesLevel[i] = 1;
-                int nodesLevelTemp = (int) ((int) minInputNeuronValue + (float)(Math.random() * ((maxInputNeuronValue - minInputNeuronValue) + 1)) * 100);
-                nodesValue[i] = (float) nodesLevelTemp / 100;
             }
 
             for(int i = 1; i <= outputNeuronsAmount; i++)
@@ -80,8 +83,7 @@ public class GenerateProcessorImpl implements GenerateProcessor {
                     {
                         edges[i][j] = 1;
                         // от -1 до 1 с двумя знаками после запятой
-                        edgeWeight[i][j] = (int)(((float)(Math.random() * ((1 + 1) + 1)) - 1) * 100);
-                        edgeWeight[i][j] = (float) (edgeWeight[i][j]) / 100;
+                        edgeWeight[i][j] = (float) roundDoubleToNDecimals(generateRandomDoubleRange(minEdgeValue, maxEdgeValue), 1);
                     }
                     else
                     {
@@ -89,6 +91,12 @@ public class GenerateProcessorImpl implements GenerateProcessor {
                         edgeWeight[i][j] = 0;
                     }
                 }
+            }
+
+            for (int i = 0; i < inputNeuronsAmount; i++)
+            {
+                inputNeuronsValues[i] = roundDoubleToNDecimals(generateRandomDoubleRange(minInputNeuronValue, maxInputNeuronValue), 2);
+                text.append("input(X").append(i).append(") = ").append(inputNeuronsValues[i]).append(". ");
             }
 
             graph.put("edgeWeight", edgeWeight);
@@ -109,8 +117,8 @@ public class GenerateProcessorImpl implements GenerateProcessor {
             e.printStackTrace();
         }
 
-        text = "Фунция активации - сигмоид.";
+        text.append("Фунция активации - сигмоид.");
 
-        return new GeneratingResult(text, code, instructions);
+        return new GeneratingResult(text.toString(), code, instructions);
     }
 }

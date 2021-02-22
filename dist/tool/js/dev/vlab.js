@@ -69,7 +69,7 @@ function dataToSigma(state) {
     });
 
     for (let i = 0; i < nodes.length; i++) {
-        let nodeValue = nodesValue[i] !== null ? `(I${i} = ${nodesValue[i]})` : "";
+        let nodeValue = nodesValue[i] !== null ? `(${nodesValue[i]})` : "";
         let nodeColor = "#000";
         let nodeId = "n" + i;
         let yLevel = 0;
@@ -209,10 +209,10 @@ function getHTML(templateData) {
                     </div>  
                     <table class="steps-table">
                         <tr>
-                            <th>№ нейрона</th>
-                            <th>Источники сигнала</th>                                   
-                            <th>Значение входного сигнала</th>
-                            <th>Значение выходного сигнала</th>
+                            <th>X</th>
+                            <th>Прообразы X</th>                                   
+                            <th>input(X)</th>
+                            <th>output(X)</th>
                         </tr>                        
                         ${tableData}                                        
                     </table>                             

@@ -146,6 +146,11 @@
     border-collapse: collapse;
 }
 
+#jsLab .lab-table
+{
+    width: 100%;
+}
+
 #jsLab .step-td
 {
     vertical-align: top;
