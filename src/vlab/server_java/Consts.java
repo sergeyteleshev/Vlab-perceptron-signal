@@ -1,5 +1,8 @@
 package vlab.server_java;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.concurrent.ThreadLocalRandom;
@@ -19,6 +22,7 @@ public class Consts {
     public static final double neuronInputSignalValueEpsilon = 0.05;
     public static final String[] activationFunctions = {"сигмовидная", "линейная", "гиперболический тангенс"};
     public static final double meanSquaredErrorEpsilon = 0.05;
+    public static final char[] charsForEquations = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
 
     public static double doubleToTwoDecimal(double number)
     {
@@ -41,5 +45,20 @@ public class Consts {
         BigDecimal bd = new BigDecimal(Double.toString(value));
         bd = bd.setScale(places, RoundingMode.HALF_UP);
         return bd.doubleValue();
+    }
+
+    private static double[][] convertJSONArrayToTwoDimensionalDoubleArray(JSONArray arr)
+    {
+        double[][] newArr = new double[arr.length()][arr.length()];
+
+        for (int i = 0; i < arr.length(); i++)
+        {
+            for(int j = 0; j < arr.getJSONArray(i).length(); j++)
+            {
+                newArr[i][j] = arr.getJSONArray(i).getDouble(j);
+            }
+        }
+
+        return newArr;
     }
 }

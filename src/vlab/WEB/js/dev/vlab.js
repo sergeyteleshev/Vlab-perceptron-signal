@@ -194,7 +194,7 @@ function getHTML(templateData) {
     return `
         <div class="lab">
             <div class="lab-table">                                                                         
-                <div class="lab-header_text">Ток сигнала в перцептроне Розенблатта</div>             
+                <div class="lab-header_text">Алгоритм последовательного распространения сигнала в нейронной сети.</div>             
                 <div class="header-buttons">
                     <button type="button" class="btn btn-info redrawGraph">Перерисовать граф</button>
                     <button type="button" class="btn btn-info showReference" data-toggle="modal" data-target="#exampleModalScrollable">Справка</button>
