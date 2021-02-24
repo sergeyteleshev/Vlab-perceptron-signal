@@ -61,4 +61,31 @@ public class Consts {
 
         return newArr;
     }
+
+    public static double[][] twoDimensionalJsonArrayToDouble(JSONArray arr)
+    {
+        double[][] result = new double[arr.length()][arr.getJSONArray(0).length()];
+
+        for(int i = 0; i < arr.length(); i++)
+        {
+            for(int j = 0; j < arr.getJSONArray(i).length(); j++)
+            {
+                result[i][j] = arr.getJSONArray(i).getDouble(j);
+            }
+        }
+
+        return result;
+    }
+
+    public static double[] jsonArrayToDouble(JSONArray arr)
+    {
+        double[] result = new double[arr.length()];
+
+        for(int i = 0; i < arr.length(); i++)
+        {
+            result[i] = arr.getDouble(i);
+        }
+
+        return result;
+    }
 }
