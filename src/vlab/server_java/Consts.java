@@ -20,13 +20,16 @@ public class Consts {
     public static final double tablePoints = 0.9;
     public static final double neuronOutputSignalValueEpsilon = 0.05;
     public static final double neuronInputSignalValueEpsilon = 0.05;
-    public static final String[] activationFunctions = {"сигмовидная", "линейная", "гиперболический тангенс"};
+    public static final String sigmoidFunction = "сигмовидная";
+    public static final String linearFunction = "линейная";
+    public static final String tgFunction = "гиперболический тангенс";
+    public static final String[] activationFunctions = {sigmoidFunction, linearFunction, tgFunction};
     public static final double meanSquaredErrorEpsilon = 0.05;
     public static final char[] charsForEquations = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
     public static final int roundEdgeWeightSign = 2;
     public static final int roundNodesValueSign = 2;
-    public static final int epochs = 3000;
-    public static final double E = 0.7;
+    public static final int epochs = 500;
+    public static final double E = 0.01;
     public static final double A = 0.3;
 
     public static double doubleToTwoDecimal(double number)

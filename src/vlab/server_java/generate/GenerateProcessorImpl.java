@@ -202,28 +202,31 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         return result;
     }
 
-    double[] generateNeuronIdealOutputSignalValues()
+    double[] generateNeuronIdealOutputSignalValues(String activationFunctionType)
     {
         double[] idealOutputSignalValues = new double[outputNeuronsAmount];
         int amountOfZerosInOutputNeurons = outputNeuronsAmount;
 
-        for(int i = 0; i < outputNeuronsAmount; i++)
-        {
-            idealOutputSignalValues[i] = generateRandomIntRange(0, outputNeuronsAmount - 1);
-            if(idealOutputSignalValues[i] != 0)
-            {
-                amountOfZerosInOutputNeurons--;
-            }
-        }
-
-        while (amountOfZerosInOutputNeurons == outputNeuronsAmount)
+        if(activationFunctionType.equals(sigmoidFunction))
         {
             for(int i = 0; i < outputNeuronsAmount; i++)
             {
-                idealOutputSignalValues[i] = generateRandomIntRange(0, outputNeuronsAmount - 1);
+                idealOutputSignalValues[i] = generateRandomIntRange(0, 1);
                 if(idealOutputSignalValues[i] != 0)
                 {
                     amountOfZerosInOutputNeurons--;
+                }
+            }
+
+            while (amountOfZerosInOutputNeurons == outputNeuronsAmount)
+            {
+                for(int i = 0; i < outputNeuronsAmount; i++)
+                {
+                    idealOutputSignalValues[i] = generateRandomIntRange(0, 1);
+                    if(idealOutputSignalValues[i] != 0)
+                    {
+                        amountOfZerosInOutputNeurons--;
+                    }
                 }
             }
         }
@@ -239,13 +242,9 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         int[] nodesLevel = (int[]) randomGraph.get("nodesLevel");
         int[] nodes = (int[]) randomGraph.get("nodes");
         double[] nodesValue = (double[]) randomGraph.get("nodesValue");
-        double[] idealOutputSignalValues = generateNeuronIdealOutputSignalValues();
+        double[] idealOutputSignalValues = generateNeuronIdealOutputSignalValues(sigmoidFunction);
+        ArrayList<double[]> deltaW = new ArrayList<>();
 
-
-        //***end***генерим сочетания значений выходных классов так, чтобы не было всех нулей на выходе***end***
-//        int[] test = findEBackEdgesFromNeuronToNeuron(4, edges);
-//        String testEq = makeLinearEquation(4, test,edgeWeight, nodesValues[4]);
-//        JSONObject wf = WolframAPI.getResults(testEq);
         int epoch = 0;
         ArrayList<JSONObject> epochsData = new ArrayList<>();
         JSONObject currentEpochData = new JSONObject();
@@ -317,13 +316,20 @@ public class GenerateProcessorImpl implements GenerateProcessor {
             }
             else
             {
+                double deltaSumEdgeMultipliedToDelta = 0;
                 for(int j = 0; j < connectedNeurons.size(); j++)
                 {
-                    delta[i] = ((1 - neuronOutputSignalValue[i]) * neuronOutputSignalValue[i]) * edgesWeight[i][connectedNeurons.get(j)] * delta[connectedNeurons.get(j)];
+                    deltaSumEdgeMultipliedToDelta += edgesWeight[i][connectedNeurons.get(j)] * delta[connectedNeurons.get(j)];
+                }
+
+                for(int j = 0; j < connectedNeurons.size(); j++)
+                {
                     grad[i][connectedNeurons.get(j)] = neuronOutputSignalValue[i] * delta[connectedNeurons.get(j)];
                     deltaW[i][connectedNeurons.get(j)] = E * grad[i][connectedNeurons.get(j)];
                     edgesWeight[i][connectedNeurons.get(j)] += deltaW[i][connectedNeurons.get(j)];
                 }
+
+                delta[i] = ((1 - neuronOutputSignalValue[i]) * neuronOutputSignalValue[i]) * deltaSumEdgeMultipliedToDelta;
             }
         }
 

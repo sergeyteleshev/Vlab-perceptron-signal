@@ -147,6 +147,8 @@ function getHTML(templateData) {
     for(let i = 0; i < templateData.neuronsTableData.length; i++)
     {
         let currentNodeSection = [templateData.neuronsTableData[i].nodeSection].toString().replaceAll("n", "");
+        if (currentNodeSection.length === 0 || currentNodeSection.length === null)
+            currentNodeSection = "-";
 
         tableData += `<tr>
             <td>
@@ -175,12 +177,15 @@ function getHTML(templateData) {
             currentNodeSection[i] = currentNodeSection[i].substring(1);
         }
 
+        if (currentNodeSection.length === 0 || currentNodeSection.length === null)
+            currentNodeSection = "-";
+
         tableData += `<tr>
             <td>
                 ${templateData.currentSelectedNodeId ? templateData.currentSelectedNodeId.substring(1) : ""}
             </td>
             <td>
-                ${templateData.currentNodeSection ? currentNodeSection : ""}
+                ${currentNodeSection}
             </td>          
             <td>            
                 ${currentNeuronInputSignalValue}
@@ -236,7 +241,15 @@ function getHTML(templateData) {
                             </button>
                           </div>
                           <div class="modal-body">                                                                             
-                                <p>Если нейронная сеть на рисунке отображена плохо, то воспользуйтесь кнопкой «Перерисовать» до тех пор, пока рисунок и нанесенные числовые значения будут хорошо видны. У нейронов входного слоя в скобках указаны их входные сигналы. Для заполнения очередной строки таблицы щелкните по выбранной вершине графа. Вершина поменяет цвет на красный и будет занесена в таблицу. Если у нейрона есть прообразы, то щелкните по каждой такой вершине на рисунке: нейроны прообразов будут занесены в таблицу. Определите входной и выходной сигнал нейрона, внесите в таблицу их значения после округления до второго знака после запятой. Для перехода к следующей строке таблицы нажмите кнопку «+». Если очередная строка заполнена неверно, то используйте кнопку «-», а после этого создайте эту строку в таблице с помощью кнопки «+» и заполните ее еще раз. После этого нейрон на рисунке поменяет цвет на зеленый. Завершить формирование таблицы, когда на рисунке все нейроны будут раскрашены зеленым цветом. Рассчитайте и введите значение оценки полученного решения MSE после округления до второго знака после запятой. После этого нажмите кнопку в правом нижнем углу стенда «Ответ готов».</p>                                
+                                <p>Если нейронная сеть на рисунке отображена плохо, то воспользуйтесь кнопкой <b>«Перерисовать»</b> до тех пор, пока рисунок и нанесенные числовые значения будут хорошо видны. </p>
+
+                                <p>У нейронов входного слоя <b>в скобках</b> указаны их входные сигналы. Для заполнения очередной строки таблицы <b>щелкните по выбранной вершине графа</b>. Вершина поменяет цвет на <b>красный</b> и будет занесена в таблицу. Если у нейрона есть прообразы, то <b>щелкните по каждой такой вершине</b> на рисунке: нейроны прообразов будут занесены в таблицу.</p> 
+                                
+                                <p>Определите входной и выходной сигнал нейрона, внесите в таблицу их значения после <b>округления до второго знака после запятой</b>. Для перехода к следующей строке таблицы нажмите <b>кнопку «+»</b>. Если очередная строка заполнена неверно, то используйте <b>кнопку «-»</b>, а после этого создайте эту строку в таблице с помощью кнопки «+» и заполните ее еще раз. После этого нейрон на рисунке поменяет цвет на зеленый.</p> 
+                                
+                                <p>Завершить формирование таблицы, когда на рисунке все нейроны будут раскрашены зеленым цветом.</p>
+                                 
+                                <p>Рассчитайте и введите значение оценки полученного решения MSE после округления до второго знака после запятой. После этого нажмите кнопку в правом нижнем углу стенда <b>«Ответ готов»</b>.</p>
                           </div>                                 
                         </div>
                       </div>
@@ -250,6 +263,10 @@ function renderTemplate(element, html) {
 }
 
 function initState() {
+    const sigmoidFunction = "сигмовидная";
+    const linearFunction = "линейная";
+    const tgFunction = "гиперболический тангенс";
+
     let _state = {
         currentNodeSection: [],
         neuronsTableData: [],
@@ -260,6 +277,7 @@ function initState() {
         prevNodeSection: [],
         currentNeuronInputSignalValue: "",
         currentNeuronOutputSignalValue: "",
+        currentActivationFunction: "",
         error: 0,
         isSelectingNodesModeActivated: false,
         currentStep: 0,
@@ -267,7 +285,10 @@ function initState() {
         outputNeuronsAmount: 0,
         amountOfHiddenLayers: 0,
         amountOfNodesInHiddenLayer: 0,
-        activationFunctions: ["сигмовидная", "линейная", "гиперболический тангенс"],
+        activationFunctions: [sigmoidFunction, linearFunction, tgFunction],
+        sigmoidFunction,
+        linearFunction,
+        tgFunction,
     };
 
     return {
@@ -360,21 +381,39 @@ function bindActionListeners(appInstance)
             let neuronsTableData = state.neuronsTableData.slice();
             let nodesValue = state.nodesValue.slice();
             let currentSelectedNodeIdNumber = state.currentSelectedNodeId.match(/(\d+)/)[0];
+            let currentNeuronInputSignalValue = state.currentNeuronInputSignalValue;
+            let currentNeuronOutputSignalValue = state.currentNeuronOutputSignalValue;
 
             let prevSelectedNodeId = state.currentSelectedNodeId;
             let prevNeuronInputSignalValue = state.currentNeuronInputSignalValue;
             let prevNeuronOutputSignalValue = state.currentNeuronOutputSignalValue;
             let prevNodeSection = state.currentNodeSection.slice();
 
-            if(state.currentSelectedNodeId.length > 0 && !isNaN(state.currentNeuronInputSignalValue) && !isNaN(state.currentNeuronOutputSignalValue)
-                && state.currentNodeSection.length > 0)
+            if(currentNeuronInputSignalValue === "")
+                currentNeuronInputSignalValue = 0;
+            if(currentNeuronOutputSignalValue === "")
+                currentNeuronOutputSignalValue = 0;
+
+            if(neuronsTableData.length < state.inputNeuronsAmount && !isNaN(currentNeuronInputSignalValue) && !isNaN(currentNeuronOutputSignalValue))
             {
-                nodesValue[currentSelectedNodeIdNumber] = state.currentNeuronOutputSignalValue;
+                nodesValue[currentSelectedNodeIdNumber] = currentNeuronOutputSignalValue;
                 currentStep++;
                 neuronsTableData.push({
                     nodeId: state.currentSelectedNodeId,
-                    neuronInputSignalValue: state.currentNeuronInputSignalValue,
-                    neuronOutputSignalValue: state.currentNeuronOutputSignalValue,
+                    neuronInputSignalValue: currentNeuronInputSignalValue,
+                    neuronOutputSignalValue: currentNeuronOutputSignalValue,
+                    nodeSection: null,
+                });
+            }
+            else if(state.currentSelectedNodeId.length > 0 && !isNaN(currentNeuronInputSignalValue) && !isNaN(currentNeuronOutputSignalValue)
+                && state.currentNodeSection.length > 0)
+            {
+                nodesValue[currentSelectedNodeIdNumber] = currentNeuronOutputSignalValue;
+                currentStep++;
+                neuronsTableData.push({
+                    nodeId: state.currentSelectedNodeId,
+                    neuronInputSignalValue: currentNeuronInputSignalValue,
+                    neuronOutputSignalValue: currentNeuronOutputSignalValue,
                     nodeSection: state.currentNodeSection,
                 });
             }
