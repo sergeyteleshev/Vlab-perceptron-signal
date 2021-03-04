@@ -147,7 +147,7 @@ function getHTML(templateData) {
     for(let i = 0; i < templateData.neuronsTableData.length; i++)
     {
         let currentNodeSection = [templateData.neuronsTableData[i].nodeSection].toString().replaceAll("n", "");
-        if (currentNodeSection.length === 0 || currentNodeSection.length === null)
+        if (currentNodeSection.length === 0)
             currentNodeSection = "-";
 
         tableData += `<tr>
@@ -169,7 +169,7 @@ function getHTML(templateData) {
     let currentNeuronInputSignalValue = `<input id="currentNeuronInputSignalValue" placeholder="Введите число" class="tableInputData" type="number" value="${templateData.currentNeuronInputSignalValue}"/>`
     let currentNeuronOutputSignalValue = `<input id="currentNeuronOutputSignalValue" placeholder="Введите число" class="tableInputData" type="number" value="${templateData.currentNeuronOutputSignalValue}"/>`
 
-    if(templateData.currentStep !== templateData.amountOfHiddenLayers * templateData.amountOfNodesInHiddenLayer + templateData.outputNeuronsAmount)
+    if(templateData.currentStep !== templateData.inputNeuronsAmount + templateData.amountOfHiddenLayers * templateData.amountOfNodesInHiddenLayer + templateData.outputNeuronsAmount)
     {
         let currentNodeSection = [...templateData.currentNodeSection];
         for(let i = 0; i < currentNodeSection.length; i++)
@@ -177,7 +177,7 @@ function getHTML(templateData) {
             currentNodeSection[i] = currentNodeSection[i].substring(1);
         }
 
-        if (currentNodeSection.length === 0 || currentNodeSection.length === null)
+        if (currentNodeSection.length === 0)
             currentNodeSection = "-";
 
         tableData += `<tr>
@@ -402,7 +402,7 @@ function bindActionListeners(appInstance)
                     nodeId: state.currentSelectedNodeId,
                     neuronInputSignalValue: currentNeuronInputSignalValue,
                     neuronOutputSignalValue: currentNeuronOutputSignalValue,
-                    nodeSection: null,
+                    nodeSection: [],
                 });
             }
             else if(state.currentSelectedNodeId.length > 0 && !isNaN(currentNeuronInputSignalValue) && !isNaN(currentNeuronOutputSignalValue)
@@ -613,6 +613,10 @@ function init_lab() {
                         let yLevelRandomDisplacement = nodes.map(node => {
                             return 2 + Math.random() * 3; //смещение ноты по Y из-за того, что не видно значение ребра при отрисовке
                         });
+
+                        let initNodesValue = [...graph.nodesValue];
+                        initNodesValue.fill(null);
+                        graph.nodesValue = [...initNodesValue];
 
                         return {
                             ...state,

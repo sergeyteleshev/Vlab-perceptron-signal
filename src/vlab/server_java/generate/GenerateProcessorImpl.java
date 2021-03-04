@@ -6,6 +6,7 @@ import rlcp.server.processor.generate.GenerateProcessor;
 import vlab.server_java.Consts;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static vlab.server_java.Consts.*;
 import static vlab.server_java.Consts.inputNeuronsAmount;
@@ -24,83 +25,29 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         try
         {
             JSONObject graph = new JSONObject();
-            JSONObject test = generateVariant();
             double[] inputNeuronsValues = new double[inputNeuronsAmount];
 
-            int minInputNeuronValue = Consts.minInputNeuronValue;
-            int maxInputNeuronValue = Consts.maxInputNeuronValue;
             int inputNeuronsAmount = Consts.inputNeuronsAmount;
             int outputNeuronsAmount = Consts.outputNeuronsAmount;
 
             int amountOfHiddenLayers = Consts.amountOfHiddenLayers;
             int amountOfNodesInHiddenLayer = Consts.amountOfNodesInHiddenLayer;
             int[] hiddenLayerNodesAmount = new int[amountOfHiddenLayers];
-            int currentHiddenLayer = 2;
 
-            int nodesAmount = inputNeuronsAmount + outputNeuronsAmount + amountOfNodesInHiddenLayer * amountOfHiddenLayers; //всего вершин в графе
-
-            int[][] edges = new int[nodesAmount][nodesAmount];
-            int[] nodes = new int[nodesAmount];
-            Object[] nodesValue = new Object[nodesAmount];
-            double[][] edgeWeight = new double[nodesAmount][nodesAmount];
-            int[] nodesLevel = new int[nodesAmount];
             final String[] activationFunctions = Consts.activationFunctions;
             int currentActivationFunctionIndex = generateRandomIntRange(0, activationFunctions.length - 1);
             String currentActivationFunction = activationFunctions[currentActivationFunctionIndex];
+            JSONObject randomGraph = generateVariant(currentActivationFunction);
 
-            //начальные значения для рецепторов
-            for(int i = 0; i < inputNeuronsAmount; i++)
-            {
-                nodesLevel[i] = 1;
-            }
-
-            for(int i = 1; i <= outputNeuronsAmount; i++)
-            {
-                nodesLevel[nodesLevel.length - i] = 1 + amountOfHiddenLayers + 1;
-            }
-
-            //уровни словёв
-            int countTemp = 0;
-            int amountOfNodesBeforeOutputNeurons = inputNeuronsAmount + amountOfNodesInHiddenLayer * amountOfHiddenLayers;
-            for(int i = inputNeuronsAmount; i < amountOfNodesBeforeOutputNeurons; i++)
-            {
-                nodesLevel[i] = currentHiddenLayer;
-                countTemp++;
-                if(countTemp % amountOfNodesInHiddenLayer == 0 && countTemp != 0)
-                {
-                    currentHiddenLayer++;
-                }
-            }
-
-            for(int i = 0; i < nodesAmount; i++)
-            {
-                nodes[i] = i;
-            }
-
-            for(int i = 0; i < nodesAmount; i++)
-            {
-                int currentNodeLevel = nodesLevel[i];
-
-                for(int j = 0; j < nodesLevel.length; j++)
-                {
-                    if(nodesLevel[j] == currentNodeLevel + 1)
-                    {
-                        edges[i][j] = 1;
-                        // от -1 до 1 с двумя знаками после запятой
-                        edgeWeight[i][j] = (double) roundDoubleToNDecimals(generateRandomDoubleRange(minEdgeValue, maxEdgeValue), 1);
-                    }
-                    else
-                    {
-                        edges[i][j] = 0;
-                        edgeWeight[i][j] = 0;
-                    }
-                }
-            }
+            double[][] edgeWeight = (double[][]) randomGraph.get("edgeWeight");
+            int[][] edges = (int[][]) randomGraph.get("edges");
+            int[] nodesLevel = (int[]) randomGraph.get("nodesLevel");
+            int[] nodes = (int[]) randomGraph.get("nodes");
+            double[] nodesValue = (double[]) randomGraph.get("nodesValue");
 
             for (int i = 0; i < inputNeuronsAmount; i++)
             {
-                inputNeuronsValues[i] = roundDoubleToNDecimals(generateRandomDoubleRange(minInputNeuronValue, maxInputNeuronValue), 2);
-                text.append("input(X").append(i).append(") = ").append(inputNeuronsValues[i]).append(". ");
+                text.append("input(X").append(i).append(") = ").append(nodesValue[i]).append(". ");
             }
 
             graph.put("edgeWeight", edgeWeight);
@@ -139,9 +86,12 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         int[] nodes = new int[nodesAmount];
         double[] nodesValue = new double[nodesAmount];
 
-        for(int i = 0; i < inputNeuronsAmount; i ++)
+        for(int i = 0; i < nodesValue.length; i++)
         {
-            nodesValue[i] = roundDoubleToNDecimals(generateRandomDoubleRange(minInputNeuronValue, maxInputNeuronValue), roundNodesValueSign);
+            if(i < inputNeuronsAmount)
+            {
+                nodesValue[i] = roundDoubleToNDecimals(generateRandomDoubleRange(minInputNeuronValue, maxInputNeuronValue), roundNodesValueSign);
+            }
         }
 
         for(int i = 0; i < nodesAmount; i++)
@@ -234,35 +184,32 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         return idealOutputSignalValues;
     }
 
-    public JSONObject generateVariant()
+    public JSONObject generateVariant(String activationFunction)
     {
-        JSONObject randomGraph = generateRandomGraph();
-        double[][] edgeWeight = (double[][]) randomGraph.get("edgeWeight");
-        int[][] edges = (int[][]) randomGraph.get("edges");
-        int[] nodesLevel = (int[]) randomGraph.get("nodesLevel");
-        int[] nodes = (int[]) randomGraph.get("nodes");
-        double[] nodesValue = (double[]) randomGraph.get("nodesValue");
-        double[] idealOutputSignalValues = generateNeuronIdealOutputSignalValues(sigmoidFunction);
-        ArrayList<double[]> deltaW = new ArrayList<>();
+        JSONObject randomGraph = new JSONObject();
+        int nodesAmountWithoutOutput = inputNeuronsAmount + amountOfHiddenLayers * amountOfNodesInHiddenLayer;
+        final int amountOfFirstClassOutputNeurons = generateRandomIntRange(1, outputNeuronsAmount);
+        int currentAmountOfFirstClassOutputNeurons = 0;
 
-        int epoch = 0;
-        ArrayList<JSONObject> epochsData = new ArrayList<>();
-        JSONObject currentEpochData = new JSONObject();
-
-        nodesValue = getSignalWithNewEdges(nodes, edges, edgeWeight, nodesValue);
-
-        while (epoch != epochs)
+        while(currentAmountOfFirstClassOutputNeurons != amountOfFirstClassOutputNeurons)
         {
-            edgeWeight = backpropagation(nodesValue, idealOutputSignalValues, edgeWeight);
-            nodesValue = getSignalWithNewEdges(nodes, edges, edgeWeight, nodesValue);
+            randomGraph = generateRandomGraph();
+            currentAmountOfFirstClassOutputNeurons = 0;
+            double[][] edgeWeight = (double[][]) randomGraph.get("edgeWeight");
+            int[][] edges = (int[][]) randomGraph.get("edges");
+            int[] nodes = (int[]) randomGraph.get("nodes");
+            double[] nodesValue = (double[]) randomGraph.get("nodesValue");
+            double[] currentNodesValue;
 
-            currentEpochData.append("nodesValue", nodesValue);
-            currentEpochData.append("edgeWeight", edgeWeight);
-            epochsData.add(currentEpochData);
-            epoch++;
+            currentNodesValue = getSignalWithNewEdges(nodes, edges, edgeWeight, nodesValue, activationFunction);
+            for(int i = nodesAmountWithoutOutput; i < nodesValue.length; i++)
+            {
+                if(currentNodesValue[i] > classBorderline)
+                    currentAmountOfFirstClassOutputNeurons++;
+            }
         }
 
-        return new JSONObject();
+        return randomGraph;
     }
 
     private static ArrayList<Integer> findEdgesToNeuron(double[][] edges, int neuronIndex)
@@ -354,8 +301,14 @@ public class GenerateProcessorImpl implements GenerateProcessor {
         return equation;
     }
 
-    private static double[] getSignalWithNewEdges(int[] nodes, int[][] edges, double[][] edgesWeight, double[] nodesValue)
+    public static double[] getSignalWithNewEdges(int[] nodes, int[][] edges, double[][] edgesWeight, double[] nodesValue, String activationFunction)
     {
+        double[] currentNodesValue = new double[nodesValue.length];
+        for(int i = 0; i < inputNeuronsAmount; i++)
+        {
+            currentNodesValue[i] = nodesValue[i];
+        }
+
         for(int i = Consts.inputNeuronsAmount; i < nodes.length; i++)
         {
             double nodeInputSignal = 0;
@@ -365,23 +318,77 @@ public class GenerateProcessorImpl implements GenerateProcessor {
             {
                 if(edges[j][i] == 1)
                 {
-                    nodeInputSignal += nodesValue[j] * edgesWeight[j][i];
+                    nodeInputSignal += currentNodesValue[j] * edgesWeight[j][i];
                 }
             }
 
-            nodeInputSignal = doubleToTwoDecimal(nodeInputSignal);
-            nodeOutputSignal = getSigmoidValue(nodeInputSignal);
-            nodeOutputSignal = doubleToTwoDecimal(nodeOutputSignal);
+            nodeInputSignal = roundDoubleToNDecimals(nodeInputSignal, roundNodesValueSign);
 
-            nodesValue[i] = nodeOutputSignal;
+            switch (activationFunction) {
+                case sigmoidFunction:
+                    nodeOutputSignal = sigmoid(nodeInputSignal);
+                    break;
+                case linearFunction:
+                    nodeOutputSignal = linear(nodeInputSignal);
+                    break;
+                case tgFunction:
+                    nodeOutputSignal = tg(nodeInputSignal);
+                    break;
+            }
+
+            nodeOutputSignal = roundDoubleToNDecimals(nodeOutputSignal, roundNodesValueSign);
+
+            currentNodesValue[i] = nodeOutputSignal;
         }
 
-        return nodesValue;
+        return currentNodesValue;
     }
 
-    private static double getSigmoidValue(double x)
+    public static double[] getInputSignalWithNewEdges(int[] nodes, int[][] edges, double[][] edgesWeight, double[] nodesValue, String activationFunction)
     {
-        return (1 / (1 + Math.exp(-x)));
+        double[] currentNodesValue = new double[nodesValue.length];
+        double[] currentInputSignalValues = new double[nodesValue.length];
+
+        for(int i = 0; i < inputNeuronsAmount; i++)
+        {
+            currentNodesValue[i] = nodesValue[i];
+            currentInputSignalValues[i] = nodesValue[i];
+        }
+
+        for(int i = Consts.inputNeuronsAmount; i < nodes.length; i++)
+        {
+            double nodeInputSignal = 0;
+            double nodeOutputSignal = 0;
+
+            for(int j = 0; j < i; j++)
+            {
+                if(edges[j][i] == 1)
+                {
+                    nodeInputSignal += currentNodesValue[j] * edgesWeight[j][i];
+                }
+            }
+
+            nodeInputSignal = roundDoubleToNDecimals(nodeInputSignal, roundNodesValueSign);
+            currentInputSignalValues[i] = nodeInputSignal;
+
+            switch (activationFunction) {
+                case sigmoidFunction:
+                    nodeOutputSignal = sigmoid(nodeInputSignal);
+                    break;
+                case linearFunction:
+                    nodeOutputSignal = linear(nodeInputSignal);
+                    break;
+                case tgFunction:
+                    nodeOutputSignal = tg(nodeInputSignal);
+                    break;
+            }
+
+            nodeOutputSignal = roundDoubleToNDecimals(nodeOutputSignal, roundNodesValueSign);
+
+            currentNodesValue[i] = nodeOutputSignal;
+        }
+
+        return currentInputSignalValues;
     }
 
     int[] findEdgesFromNeuronToNeuron(int nodeIndex, int[][] edges)
