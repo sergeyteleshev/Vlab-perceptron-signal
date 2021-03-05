@@ -349,7 +349,7 @@ function bindActionListeners(appInstance)
         appInstance.subscriber.emit('render', state);
     });
 
-    if(appInstance.state.getState().currentStep !== appInstance.state.getState().amountOfNodesInHiddenLayer * appInstance.state.getState().amountOfHiddenLayers + appInstance.state.getState().outputNeuronsAmount)
+    if(appInstance.state.getState().currentStep !== appInstance.state.getState().inputNeuronsAmount + appInstance.state.getState().amountOfNodesInHiddenLayer * appInstance.state.getState().amountOfHiddenLayers + appInstance.state.getState().outputNeuronsAmount)
     {
         document.getElementById("currentNeuronOutputSignalValue").addEventListener('change', () => {
             const state = appInstance.state.updateState((state) => {

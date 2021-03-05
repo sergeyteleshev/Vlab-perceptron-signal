@@ -10,7 +10,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Consts {
     public static final int minInputNeuronValue = 0;
     public static final int maxInputNeuronValue = 1;
-    public static final double minEdgeValue = 0.1;
+    public static final double minEdgeValue = 0;
     public static final double maxEdgeValue = 1;
     public static final int inputNeuronsAmount = 2;
     public static final int outputNeuronsAmount = 2;

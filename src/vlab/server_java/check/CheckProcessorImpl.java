@@ -193,11 +193,21 @@ public class CheckProcessorImpl implements PreCheckResultAwareCheckProcessor<Str
     {
         double sum = 0;
         double mse;
+        int[] idealOutputNeuronValues = new int[outputNeuronsAmount];
 
         for (int i = 1; i < outputNeuronsAmount + 1; i++)
         {
             double currentOutputNeuronValue = serverAnswer.getJSONObject(serverAnswer.length() - i).getDouble("neuronOutputSignalValue");
-            sum += Math.pow((1 - currentOutputNeuronValue), 2);
+            if(currentOutputNeuronValue > classBorderline)
+                idealOutputNeuronValues[i - 1] = 1;
+            else
+                idealOutputNeuronValues[i - 1] = 0;
+        }
+
+        for (int i = 1; i < outputNeuronsAmount + 1; i++)
+        {
+            double currentOutputNeuronValue = serverAnswer.getJSONObject(serverAnswer.length() - i).getDouble("neuronOutputSignalValue");
+            sum += Math.pow((idealOutputNeuronValues[i - 1] - currentOutputNeuronValue), 2);
         }
 
         mse = sum / outputNeuronsAmount;
