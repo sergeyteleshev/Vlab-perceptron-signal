@@ -6,7 +6,6 @@ import rlcp.server.processor.generate.GenerateProcessor;
 import vlab.server_java.Consts;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import static vlab.server_java.Consts.*;
 import static vlab.server_java.Consts.inputNeuronsAmount;
@@ -188,13 +187,13 @@ public class GenerateProcessorImpl implements GenerateProcessor {
     {
         JSONObject randomGraph = new JSONObject();
         int nodesAmountWithoutOutput = inputNeuronsAmount + amountOfHiddenLayers * amountOfNodesInHiddenLayer;
-        final int amountOfFirstClassOutputNeurons = generateRandomIntRange(1, outputNeuronsAmount);
-        int currentAmountOfFirstClassOutputNeurons = 0;
+        final int amountOfZeroClassOutputNeurons = generateRandomIntRange(1, outputNeuronsAmount);
+        int currentAmountOfZeroClassOutputNeurons = 0;
 
-        while(currentAmountOfFirstClassOutputNeurons != amountOfFirstClassOutputNeurons)
+        while(currentAmountOfZeroClassOutputNeurons != amountOfZeroClassOutputNeurons)
         {
             randomGraph = generateRandomGraph();
-            currentAmountOfFirstClassOutputNeurons = 0;
+            currentAmountOfZeroClassOutputNeurons = 0;
             double[][] edgeWeight = (double[][]) randomGraph.get("edgeWeight");
             int[][] edges = (int[][]) randomGraph.get("edges");
             int[] nodes = (int[]) randomGraph.get("nodes");
@@ -204,8 +203,8 @@ public class GenerateProcessorImpl implements GenerateProcessor {
             currentNodesValue = getSignalWithNewEdges(nodes, edges, edgeWeight, nodesValue, activationFunction);
             for(int i = nodesAmountWithoutOutput; i < nodesValue.length; i++)
             {
-                if(currentNodesValue[i] > classBorderline)
-                    currentAmountOfFirstClassOutputNeurons++;
+                if(currentNodesValue[i] <= classBorderline)
+                    currentAmountOfZeroClassOutputNeurons++;
             }
         }
 
